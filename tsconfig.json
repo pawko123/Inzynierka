@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "target": "es6",
+    "target": "ES2020",
     "moduleResolution": "node",
-    "sourceMap": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    //"strict": true,
     "outDir": "dist",
-     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true
+    "skipLibCheck": true
   },
-  "lib": ["es2015"]
+  "include": ["src/**/*", "src/config/data-source.ts"]
 }
