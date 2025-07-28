@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 import { NextFunction, Request, Response } from "express";
+import { AppDataSource } from "../config/data-source";
+import { User } from "../models/User";
 
 const checkForToken = async (req:Request):Promise<string> => {
 
@@ -19,8 +21,8 @@ export const verifyTokenMiddleware = async(req:Request, res:Response, next:NextF
     }); 
     try { 
         const decoded = jwt.verify(token,  
-            process.env.JWT_SECRET_KEY||"default"); 
-        req.body.user = decoded; 
+            process.env.JWT_SECRET_KEY||"default") as jwt.JwtPayload; 
+        req.body.userId = decoded.id; 
     } catch (err) { 
         return res.status(401).json({  
             msg: "Invalid Token" 
@@ -28,3 +30,30 @@ export const verifyTokenMiddleware = async(req:Request, res:Response, next:NextF
     } 
     next(); 
 }; 
+
+export const verifyTokenAndReturnUser = async (req: Request, res: Response): Promise<any> => {
+  const token = await checkForToken(req);
+  if (!token) return res.status(403).json({ msg: "No token provided" });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY || "default") as jwt.JwtPayload;
+
+    // Adjust this query to match your user/role structure
+    const userRepo = AppDataSource.getRepository(User);
+    const user = await userRepo.findOne({
+      where: { id: decoded.id }
+    });
+
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+
+    const userData: any = { ...user };
+    delete userData.passwordHash;
+
+    return res.status(200).json(userData);
+
+  } catch (err) {
+    return res.status(401).json({ msg: "Invalid Token" });
+  }
+};

@@ -10,7 +10,11 @@ const app = express();
 
 app.use(express.json());
 app.use(cors());
-app.use('/',router)
+app.use('/',router());
+
+app.use('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
 
 AppDataSource.initialize()
   .then(async (connection) => {

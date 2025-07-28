@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { AppDataSource } from '../config/data-source';
 import { comparePassword } from '../services/encryptionService';
 import { User } from '../models/User';
+import { hashPassword } from '../services/encryptionService';
 
 
 const login = async (req: Request, res: Response) => {
@@ -36,6 +37,33 @@ const login = async (req: Request, res: Response) => {
     }
 }
 
+const registerUser = async (req: Request, res: Response) => {
+  try {
+    const { username, email, password, repeatPassword } = req.body;
+    if (!username || !email || !password || !repeatPassword) {
+      return res.status(400).json({ error: "All fields are required." });
+    }
+    if (password !== repeatPassword) {
+      return res.status(400).json({ error: "Passwords do not match." });
+    }
+
+    const userRepo = AppDataSource.getRepository(User);
+    const existingUser = await userRepo.findOne({ where: [{ username }, { email }] });
+    if (existingUser) {
+      return res.status(409).json({ error: "Username or email already exists." });
+    }
+
+    const passwordHash = await hashPassword(password);
+    const user = userRepo.create({ username, email, passwordHash });
+    await userRepo.save(user);
+
+    return res.status(201).json({ id: user.id, username: user.username, email: user.email, createdAt: user.createdAt });
+  } catch (err) {
+    return res.status(500).json({ error: "Registration failed." });
+  }
+};
+
 export const authController = {
-    login
+    login,
+    registerUser
 };
