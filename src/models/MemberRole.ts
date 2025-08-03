@@ -7,9 +7,9 @@ export class MemberRole {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @ManyToOne(() => ServerMember, member => member.roles)
+  @ManyToOne(() => ServerMember, member => member.roles, { onDelete: "CASCADE" })
   member: ServerMember;
 
-  @ManyToOne(() => Role, role => role.members)
+  @ManyToOne(() => Role, role => role.members, { onDelete: "CASCADE" })
   role: Role;
 }

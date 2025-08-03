@@ -8,10 +8,10 @@ export class Message {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @ManyToOne(() => Channel, channel => channel.messages)
+  @ManyToOne(() => Channel, channel => channel.messages, { onDelete: "CASCADE" })
   channel: Channel;
 
-  @ManyToOne(() => User, user => user.messages)
+  @ManyToOne(() => User, user => user.messages, { onDelete: "SET NULL", nullable: true })
   sender: User;
 
   @Column("text")

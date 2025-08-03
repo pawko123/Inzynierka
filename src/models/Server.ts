@@ -3,6 +3,7 @@ import { User } from "./User";
 import { ServerMember } from "./ServerMember";
 import { Role } from "./Role";
 import { Channel } from "./Channel";
+import { ServerInvite } from "./ServerInvite";
 
 @Entity()
 export class Server {
@@ -18,7 +19,10 @@ export class Server {
   @CreateDateColumn()
   createdAt: Date;
 
-  @OneToMany(() => ServerMember, member => member.server)
+  @Column({ type: 'text', nullable: true })
+  logo: string | null;
+
+  @OneToMany(() => ServerMember, member => member.server,)
   members: ServerMember[];
 
   @OneToMany(() => Role, role => role.server)
@@ -26,4 +30,7 @@ export class Server {
 
   @OneToMany(() => Channel, channel => channel.server)
   channels: Channel[];
+
+  @OneToMany(() => ServerInvite, invite => invite.server)
+  invites: ServerInvite[];
 }

@@ -10,7 +10,7 @@ export class ChannelPermission {
   @ManyToOne(() => Channel, channel => channel.permissions)
   channel: Channel;
 
-  @ManyToOne(() => Role, role => role.channelPermissions)
+  @ManyToOne(() => Role, role => role.channelPermissions, { onDelete: "CASCADE" })
   role: Role;
 
   @Column()

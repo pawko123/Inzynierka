@@ -5,6 +5,7 @@ import { RolePermission } from "../models/RolePermission";
 import { ServerMember } from "../models/ServerMember";
 import { ChannelPermissionType } from "../models/ChannelPermissionType";
 import { Message } from "../models/Message";
+import { RolePermissionType } from "../models/RolePermissionType";
 
 export const checkUserPermission = (permission: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -26,8 +27,12 @@ export const checkUserPermission = (permission: string) => {
     if (serverId) {
       const member = await memberRepo.findOne({ where: { user: { id: userId }, server: { id: serverId } }, relations: ["roles", "roles.role", "roles.role.channelPermissions", "roles.role.permissions"] });
       if (member && member.roles) {
-        memberRoles = member.roles;
+      memberRoles = member.roles;
       }
+    }
+
+    if (memberRoles.some(mr => mr.role && mr.role.isDefault == true)) {
+      return next();
     }
 
     let hasPermission = false;
@@ -48,7 +53,7 @@ export const checkUserPermission = (permission: string) => {
       for (const memberRole of memberRoles) {
         const role = memberRole.role;
         if (role && role.permissions) {
-          if (role.permissions.some(p => p.type === permission)) {
+          if (role.permissions.some(p => p.permission === permission)) {
             hasPermission = true;
             break;
           }
@@ -65,6 +70,12 @@ export const checkUserPermission = (permission: string) => {
             return next();
         }
 
+        if(permission === RolePermissionType.SERVER_MEMBER) {
+            if (await checkIfUserIsMember(userId, serverId)) {
+                return next();
+            }
+        }
+
         if (await isSelfDeleteMessage(permission, req, userId)) {
             return next();
         }
@@ -76,6 +87,11 @@ export const checkUserPermission = (permission: string) => {
   };
 };
 
+const checkIfUserIsMember = async (userId: string, serverId: string): Promise<boolean> => {
+  const memberRepo = AppDataSource.getRepository(ServerMember);
+  const member = await memberRepo.findOne({ where: { user: { id: userId }, server: { id: serverId } } });
+  return !!member;
+}
 
 const isSelfMute = (permission: string, req: Request, userId: string): boolean => {
   return permission === ChannelPermissionType.MUTE_MEMBERS && req.body.userToMuteId === userId;

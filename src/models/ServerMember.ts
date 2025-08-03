@@ -11,7 +11,7 @@ export class ServerMember {
   @ManyToOne(() => User, user => user.memberships)
   user: User;
 
-  @ManyToOne(() => Server, server => server.members)
+  @ManyToOne(() => Server, server => server.members, { onDelete: "CASCADE" })
   server: Server;
 
   @CreateDateColumn()

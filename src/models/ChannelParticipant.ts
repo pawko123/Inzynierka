@@ -7,7 +7,7 @@ export class ChannelParticipant {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @ManyToOne(() => Channel, channel => channel.participants)
+  @ManyToOne(() => Channel, channel => channel.participants, { onDelete: "CASCADE" })
   channel: Channel;
 
   @ManyToOne(() => User)

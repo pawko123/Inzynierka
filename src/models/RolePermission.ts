@@ -6,7 +6,7 @@ export class RolePermission {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @ManyToOne(() => Role, role => role.permissions)
+  @ManyToOne(() => Role, role => role.permissions, { onDelete: "CASCADE" })
   role: Role;
 
   @Column()

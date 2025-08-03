@@ -9,7 +9,7 @@ export class Role {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @ManyToOne(() => Server, server => server.roles)
+  @ManyToOne(() => Server, server => server.roles, { onDelete: "CASCADE" })
   server: Server;
 
   @Column()
@@ -24,7 +24,7 @@ export class Role {
   @OneToMany(() => RolePermission, rp => rp.role)
   permissions: RolePermission[];
 
-  @OneToMany(() => MemberRole, mr => mr.role)
+  @OneToMany(() => MemberRole, mr => mr.role,)
   members: MemberRole[];
 
   @OneToMany(() => ChannelPermission, cp => cp.role)
