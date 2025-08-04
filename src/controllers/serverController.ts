@@ -5,7 +5,7 @@ import { Role } from '../models/Role';
 import { User } from '../models/User';
 import { MemberRole } from '../models/MemberRole';
 import { ServerMember } from '../models/ServerMember';
-import { ServerDto } from './dto/serverResponse.dto';
+import { ServerDto } from './dto/server/serverResponse.dto';
 
 const createServer = async (req: Request, res: Response) => {
     const { name, userId } = req.body;
@@ -275,6 +275,31 @@ const getServerMembers = async (req: Request, res: Response) => {
     }
 };
 
+const getServerChannels = async (req: Request, res: Response) => {
+    const { serverId } = req.query;
+    if (!serverId) {
+        return res.status(400).json({ error: 'Missing serverId.' });
+    }
+    try {
+        const channelRepo = AppDataSource.getRepository("Channel");
+        const channels = await channelRepo.find({
+            where: { server: { id: String(serverId) }, isDirect: false },
+        });
+
+        const result = channels.map(channel => ({
+            id: channel.id,
+            name: channel.name,
+            type: channel.type,
+            createdAt: channel.createdAt
+        }));
+        
+        return res.status(200).json(result);
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+};
+
 export const serverController = {
     createServer,
     deleteServer,
@@ -282,5 +307,6 @@ export const serverController = {
     updateServer,
     getServer,
     getServerMembers,
+    getServerChannels,
 };
 

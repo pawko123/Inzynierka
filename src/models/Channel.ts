@@ -3,20 +3,21 @@ import { Server } from "./Server";
 import { Message } from "./Message";
 import { ChannelPermission } from "./ChannelPermission";
 import { ChannelParticipant } from "./ChannelParticipant";
+import { ChannelType } from "./ChannelType";
 
 @Entity()
 export class Channel {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @ManyToOne(() => Server, server => server.channels, { onDelete: "CASCADE" })
+  @ManyToOne(() => Server, server => server.channels, { onDelete: "CASCADE", nullable:true })
   server: Server;
 
   @Column()
   name: string;
 
-  @Column({ default: "text" }) // or "voice"
-  type: string;
+  @Column({ default: ChannelType.TEXT })
+  type: ChannelType;
 
   @CreateDateColumn()
   createdAt: Date;

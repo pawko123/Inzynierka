@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
 import { Role } from "./Role";
+import { RolePermissionType } from "./RolePermissionType";
 
 @Entity()
 export class RolePermission {
@@ -10,5 +11,5 @@ export class RolePermission {
   role: Role;
 
   @Column()
-  permission: string; // e.g. "SEND_MESSAGES"
+  permission: RolePermissionType;
 }

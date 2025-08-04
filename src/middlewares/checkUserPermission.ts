@@ -40,7 +40,7 @@ export const checkUserPermission = (permission: string) => {
       for (const memberRole of memberRoles) {
         const role = memberRole.role;
         if (role && role.channelPermissions) {
-          const channelPerm = role.channelPermissions.find(cp => cp.channelId === channelId && cp.type === permission);
+          const channelPerm = role.channelPermissions.find(cp => cp.channelId === channelId && cp.permission === permission);
           if (channelPerm) {
             hasPermission = true;
             break;
@@ -72,6 +72,14 @@ export const checkUserPermission = (permission: string) => {
 
         if(permission === RolePermissionType.SERVER_MEMBER) {
             if (await checkIfUserIsMember(userId, serverId)) {
+                return next();
+            }
+        }
+
+        if (permission === RolePermissionType.MANAGE_SERVER && channelId) {
+            const channelRepo = AppDataSource.getRepository("Channel");
+            const channel = await channelRepo.findOne({ where: { id: channelId } });
+            if (channel && channel.isDirect) {
                 return next();
             }
         }

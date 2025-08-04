@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
 import { Channel } from "./Channel";
 import { Role } from "./Role";
+import { RolePermissionType } from "./RolePermissionType";
 
 @Entity()
 export class ChannelPermission {
@@ -14,7 +15,7 @@ export class ChannelPermission {
   role: Role;
 
   @Column()
-  permission: string;
+  permission: RolePermissionType;
 
   @Column()
   allow: boolean;

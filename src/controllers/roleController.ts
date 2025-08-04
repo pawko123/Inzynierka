@@ -5,6 +5,7 @@ import { Request, Response } from 'express';
 import { AppDataSource } from '../config/data-source';
 import { Role } from '../models/Role';
 import { Server } from '../models/Server';
+import { RolePermissionType } from '../models/RolePermissionType';
 
 
 const createRole = async (req: Request, res: Response) => {
@@ -80,9 +81,12 @@ const updateRolePermissions = async (req: Request, res: Response) => {
                 await rolePermissionRepo.remove(role.permissions);
             }
             const newPermissions: RolePermission[] = permissions.map((perm: string) => {
+                if (!Object.values(RolePermissionType).includes(perm as RolePermissionType)) {
+                    throw new Error(`Invalid permission type: ${perm}`);
+                }
                 const rp = new RolePermission();
                 rp.role = role;
-                rp.permission = perm;
+                rp.permission = perm as RolePermissionType;
                 return rp;
             });
             await rolePermissionRepo.save(newPermissions);
@@ -91,6 +95,9 @@ const updateRolePermissions = async (req: Request, res: Response) => {
     } catch (err) {
         if (err.message === 'NOT_FOUND') {
             return res.status(404).json({ error: 'Role not found.' });
+        }
+        if (err.message.startsWith('Invalid permission type:')) {
+            return res.status(400).json({ error: err.message });
         }
         console.error(err);
         return res.status(500).json({ error: 'Internal server error.' });

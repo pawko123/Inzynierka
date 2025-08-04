@@ -16,5 +16,7 @@ serverRouter.put("/update", upload.single('logo'), verifyTokenMiddleware,
 serverRouter.get("/getServer", verifyTokenMiddleware, serverController.getServer);
 serverRouter.get("/getMembers", verifyTokenMiddleware, 
     checkUserPermission(RolePermissionType.SERVER_MEMBER), serverController.getServerMembers);
+serverRouter.get("/getChannels", verifyTokenMiddleware, 
+    checkUserPermission(RolePermissionType.MANAGE_SERVER), serverController.getServerChannels);
 
 export default serverRouter;
