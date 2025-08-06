@@ -62,7 +62,7 @@ export const acceptInvite = async (req: Request, res: Response) => {
             const member = new ServerMember();
             member.user = user;
             member.server = invite.server;
-            await memberRepo.save(member);
+            member.memberName = user.username;
             invite.uses += 1;
             await inviteRepo.save(invite);
             

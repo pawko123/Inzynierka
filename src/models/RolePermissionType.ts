@@ -1,4 +1,4 @@
-export enum RolePermissionType {
+export enum PermissionType {
   // Server-wide permissions
   MANAGE_SERVER = 'MANAGE_SERVER',
   KICK_MEMBERS = 'KICK_MEMBERS',

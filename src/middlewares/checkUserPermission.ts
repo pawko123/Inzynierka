@@ -3,9 +3,8 @@ import { AppDataSource } from "../config/data-source";
 import { User } from "../models/User";
 import { RolePermission } from "../models/RolePermission";
 import { ServerMember } from "../models/ServerMember";
-import { ChannelPermissionType } from "../models/ChannelPermissionType";
 import { Message } from "../models/Message";
-import { RolePermissionType } from "../models/RolePermissionType";
+import { PermissionType } from "../models/RolePermissionType";
 
 export const checkUserPermission = (permission: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -70,13 +69,13 @@ export const checkUserPermission = (permission: string) => {
             return next();
         }
 
-        if(permission === RolePermissionType.SERVER_MEMBER) {
+        if(permission === PermissionType.SERVER_MEMBER) {
             if (await checkIfUserIsMember(userId, serverId)) {
                 return next();
             }
         }
 
-        if (permission === RolePermissionType.MANAGE_SERVER && channelId) {
+        if (permission === PermissionType.MANAGE_SERVER && channelId) {
             const channelRepo = AppDataSource.getRepository("Channel");
             const channel = await channelRepo.findOne({ where: { id: channelId } });
             if (channel && channel.isDirect) {
@@ -102,16 +101,16 @@ const checkIfUserIsMember = async (userId: string, serverId: string): Promise<bo
 }
 
 const isSelfMute = (permission: string, req: Request, userId: string): boolean => {
-  return permission === ChannelPermissionType.MUTE_MEMBERS && req.body.userToMuteId === userId;
+  return permission === PermissionType.MUTE_MEMBERS && req.body.userToMuteId === userId;
 }
 
 const isSelfDeafen = (permission: string, req: Request, userId: string): boolean => {
-  return permission === ChannelPermissionType.DEAFEN_MEMBERS && req.body.messageSenderId === userId;
+  return permission === PermissionType.DEAFEN_MEMBERS && req.body.messageSenderId === userId;
 }
 
 const isSelfDeleteMessage = async (permission: string, req: Request, userId: string): Promise<boolean> => {
 
-    if (permission !== ChannelPermissionType.MANAGE_MESSAGES) {
+    if (permission !== PermissionType.MANAGE_MESSAGES) {
         return false;
     }
 

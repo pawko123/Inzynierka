@@ -5,7 +5,13 @@ import { Request, Response } from 'express';
 import { AppDataSource } from '../config/data-source';
 import { Role } from '../models/Role';
 import { Server } from '../models/Server';
-import { RolePermissionType } from '../models/RolePermissionType';
+import { PermissionType } from '../models/RolePermissionType';
+import { ChannelRulesUpdateDto } from './dto/channel/channelRules.dto';
+import { ChannelPermissionDto } from './dto/channel/channelPermission.dto';
+import { Channel } from '../models/Channel';
+import { In } from 'typeorm/find-options/operator/In';
+import { ChannelPermission } from '../models/ChannelPermission';
+import { GetRoleResponseDto } from './dto/role/getRole.dto';
 
 
 const createRole = async (req: Request, res: Response) => {
@@ -81,12 +87,12 @@ const updateRolePermissions = async (req: Request, res: Response) => {
                 await rolePermissionRepo.remove(role.permissions);
             }
             const newPermissions: RolePermission[] = permissions.map((perm: string) => {
-                if (!Object.values(RolePermissionType).includes(perm as RolePermissionType)) {
+                if (!Object.values(PermissionType).includes(perm as PermissionType)) {
                     throw new Error(`Invalid permission type: ${perm}`);
                 }
                 const rp = new RolePermission();
                 rp.role = role;
-                rp.permission = perm as RolePermissionType;
+                rp.permission = perm as PermissionType;
                 return rp;
             });
             await rolePermissionRepo.save(newPermissions);
@@ -113,19 +119,33 @@ const getRoleWithPermissionsById = async (req: Request, res: Response) => {
         const roleRepo = AppDataSource.getRepository(Role);
         const role = await roleRepo.findOne({
             where: { id: String(roleId) },
-            relations: ['permissions', 'channelPermissions', 'server'],
+            relations: ['permissions', 'server', 'members.member', 'members.member.user'],
         });
         if (!role) {
             return res.status(404).json({ error: 'Role not found.' });
         }
-        const result = {
+
+        const channelPermissions: ChannelPermissionDto[] = await AppDataSource.getRepository(ChannelPermission)
+            .createQueryBuilder('cp')
+            .select('cp.channelId', 'channelId')
+            .addSelect('ARRAY_AGG(cp.permission)', 'permissions')
+            .where('cp.roleId = :roleId', { roleId })
+            .groupBy('cp.channelId')
+            .getRawMany();
+
+        const result: GetRoleResponseDto = {
             id: role.id,
             name: role.name,
             color: role.color,
             isDefault: role.isDefault,
             serverId: role.server?.id,
-            permissions: role.permissions?.map(p => p.permission) || [],
-            channelPermissions: role.channelPermissions || [],
+            rolePermissions: role.permissions.map(p => p.permission),
+            channelPermissions: channelPermissions,
+            currentHolders: role.members.map(memberRole => ({
+                id: memberRole.member.id,
+                userId: memberRole.member.user.id,
+                memberName: memberRole.member.memberName,
+            })),
         };
         return res.status(200).json(result);
     } catch (err) {
@@ -186,6 +206,71 @@ const removeRoleFromMember = async (req: Request, res: Response) => {
     }
 };
 
+const editRoleChannelPermissions = async (req: Request, res: Response) => {
+    const requestBody = req.body as ChannelRulesUpdateDto;
+
+    if (!requestBody || !Array.isArray(requestBody.channelPermissions) || 
+    !requestBody.serverId || !requestBody.roleId) {
+        return res.status(400).json({ error: 'Invalid request body.' });
+    }
+
+    try {
+        await AppDataSource.transaction(async (manager) => {
+            const roleRepo = manager.getRepository(Role);
+            const channelPermissionRepo = manager.getRepository(ChannelPermission);
+
+            const channelRepo = manager.getRepository(Channel);
+            const channels = await channelRepo.find({
+                where: {
+                    server: { id: requestBody.serverId },
+                    id: In(requestBody.channelPermissions.map(cp => cp.channelId))
+                },
+                select: ['id']
+            });
+
+            if (channels.length !== requestBody.channelPermissions.length) {
+                throw new Error('Invalid body: One or more channels do not exist on the server.');
+            }
+
+            const role = await roleRepo.findOne({ where: { id: requestBody.roleId, server: { id: requestBody.serverId } }, relations: ['channelPermissions'] });
+            if (!role) {
+                throw new Error('Invalid body: Role not found or does not belong to the specified server.');
+            }
+
+            const existingPermissions = await channelPermissionRepo.find({
+                where: { role: { id: role.id }, channel: { id: In(channels.map(c => c.id)) } }
+            });
+
+            await channelPermissionRepo.remove(existingPermissions);
+
+            const newPermissions: ChannelPermission[] = [];
+            for (const cp of requestBody.channelPermissions) {
+                if (!Array.isArray(cp.permissions)) {
+                    throw new Error(`Invalid body: Permissions for channel ${cp.channelId} must be an array.`);
+                }
+                for (const perm of cp.permissions) {
+                    if (!Object.values(PermissionType).includes(perm as PermissionType)) {
+                        throw new Error(`Invalid body: Invalid permission type in channel ${cp.channelId}: ${perm}`);
+                    }
+                    const channelPerm = new ChannelPermission();
+                    channelPerm.channel = channels.find(c => c.id === cp.channelId);
+                    channelPerm.role = role;
+                    channelPerm.permission = perm as PermissionType;
+                    newPermissions.push(channelPerm);
+                }
+            }
+            await channelPermissionRepo.save(newPermissions);
+        });
+        
+        return res.status(200).json({ message: 'Channel permissions updated successfully.' });
+    } catch (err) {
+        if (err.message.startsWith('Invalid body:')) {
+            return res.status(400).json({ error: err.message });
+        }
+        console.error(err);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+};
 
 export const roleController = {
     createRole,
@@ -194,4 +279,5 @@ export const roleController = {
     getRoleWithPermissionsById,
     addRoleToMember,
     removeRoleFromMember,
+    editRoleChannelPermissions,
 };
