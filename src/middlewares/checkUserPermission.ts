@@ -8,9 +8,9 @@ import { PermissionType } from "../models/RolePermissionType";
 
 export const checkUserPermission = (permission: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.body.userId || req.query.userId;
-    const serverId = req.body.serverId || req.query.serverId;
-    const channelId = req.body.channelId || req.query.channelId;
+    const userId = req.body.userId || req.query.userId || req.params.userId;
+    const serverId = req.body.serverId || req.query.serverId || req.params.serverId;
+    const channelId = req.body.channelId || req.query.channelId || req.params.channelId;
     if (!userId) {
       return res.status(401).json({ error: "User ID not provided." });
     }
@@ -22,6 +22,17 @@ export const checkUserPermission = (permission: string) => {
       return res.status(404).json({ error: "User not found." });
     }
 
+    if ((permission === PermissionType.MANAGE_SERVER 
+          || permission === PermissionType.SEND_MESSAGES
+          || permission === PermissionType.VIEW_CHANNEL) 
+          && channelId) {
+            const channelRepo = AppDataSource.getRepository("Channel");
+            const channel = await channelRepo.findOne({ where: { id: channelId } });
+            if (channel && channel.isDirect) {
+                return next();
+            }
+        }
+        
     let memberRoles = [];
     if (serverId) {
       const member = await memberRepo.findOne({ where: { user: { id: userId }, server: { id: serverId } }, relations: ["roles", "roles.role", "roles.role.channelPermissions", "roles.role.permissions"] });
@@ -71,14 +82,6 @@ export const checkUserPermission = (permission: string) => {
 
         if(permission === PermissionType.SERVER_MEMBER) {
             if (await checkIfUserIsMember(userId, serverId)) {
-                return next();
-            }
-        }
-
-        if (permission === PermissionType.MANAGE_SERVER && channelId) {
-            const channelRepo = AppDataSource.getRepository("Channel");
-            const channel = await channelRepo.findOne({ where: { id: channelId } });
-            if (channel && channel.isDirect) {
                 return next();
             }
         }

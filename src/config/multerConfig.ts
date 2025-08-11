@@ -36,7 +36,7 @@ const allowedMimeTypes = [
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.resolve(__dirname, '../../data'));
+    cb(null, path.resolve(process.env.FILE_PATH));
   },
   filename: function (req, file, cb) {
     const ext = path.extname(file.originalname);

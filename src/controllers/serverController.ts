@@ -52,6 +52,7 @@ const createServer = async (req: Request, res: Response) => {
 
             const serverMember = new ServerMember();
             serverMember.user = user;
+            serverMember.memberName = user.username;
             serverMember.server = newServer;
             await serverMemberRepo.save(serverMember);
 
