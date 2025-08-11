@@ -65,6 +65,7 @@ export const acceptInvite = async (req: Request, res: Response) => {
             member.memberName = user.username;
             invite.uses += 1;
             await inviteRepo.save(invite);
+            await memberRepo.save(member);
             
             (req as any)._joinedServerId = invite.server.id;
         });

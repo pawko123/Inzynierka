@@ -201,12 +201,41 @@ const getDirectChannelParticipants = async (req: Request, res: Response) => {
   }
 };
 
+const getUserDirectChannels = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ message: "userId is required" });
+    }
+
+    const participantRepo = AppDataSource.getRepository(ChannelParticipant);
+
+    const participants = await participantRepo.find({
+      where: { user: { id: String(userId) }, channel: { isDirect: true } },
+      relations: ["channel"]
+    });
+
+    const directChannels = participants
+      .filter(p => p.channel.isDirect)
+      .map(p => ({
+        id: p.channel.id,
+        name: p.channel.name,
+        type: p.channel.type,
+      }));
+
+    return res.status(200).json(directChannels);
+  } catch (err) {
+    return res.status(500).json({ message: "Error getting direct channels", error: err.message });
+  }
+};
+
 export const channelController = {
   createChannel,
   createDirectChannel,
   updateChannel,
   deleteChannel,
   addMemberToDirectChannel,
-  getDirectChannelParticipants
+  getDirectChannelParticipants,
+  getUserDirectChannels
 };
 

@@ -259,6 +259,7 @@ const getServerMembers = async (req: Request, res: Response) => {
         });
         const result = members.map(member => ({
             id: member.id,
+            memberName: member.memberName,
             user: {
                 id: member.user.id,
                 username: member.user.username,

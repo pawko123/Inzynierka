@@ -12,5 +12,6 @@ router.put("/update", verifyTokenMiddleware, checkUserPermission(PermissionType.
 router.delete("/delete", verifyTokenMiddleware, checkUserPermission(PermissionType.MANAGE_SERVER), channelController.deleteChannel);
 router.post("/direct/add-member", verifyTokenMiddleware, channelController.addMemberToDirectChannel);
 router.get("/direct/participants", verifyTokenMiddleware, channelController.getDirectChannelParticipants);
+router.get("/direct/userChannels", verifyTokenMiddleware, channelController.getUserDirectChannels);
 
 export default router;
