@@ -1,0 +1,20 @@
+{
+	"Auth": {
+		"Sign_in": "Sign in",
+		"Email": "Email",
+		"Password": "Password",
+		"Signing_in": "Signing in...",
+		"No_account": "No account? Register",
+		"Create_account": "Create account",
+		"Username": "Username",
+		"Repeat_password": "Repeat Password",
+		"Creating": "Creating...",
+		"Have_account": "Have an account? Sign in",
+		"Errors": {
+			"Required": "All fields are required",
+			"Password_mismatch": "Passwords do not match",
+			"Login_failed": "Login failed",
+			"Register_failed": "Registration failed"
+		}
+	}
+}

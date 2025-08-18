@@ -1,0 +1,20 @@
+{
+	"Auth": {
+		"Sign_in": "Zaloguj się",
+		"Email": "Email",
+		"Password": "Hasło",
+		"Signing_in": "Logowanie...",
+		"No_account": "Nie masz konta? Zarejestruj się",
+		"Create_account": "Utwórz konto",
+		"Username": "Nazwa użytkownika",
+		"Repeat_password": "Powtórz hasło",
+		"Creating": "Tworzenie...",
+		"Have_account": "Masz konto? Zaloguj się",
+		"Errors": {
+			"Required": "Wszystkie pola są wymagane",
+			"Password_mismatch": "Hasła nie są takie same",
+			"Login_failed": "Logowanie nie powiodło się",
+			"Register_failed": "Rejestracja nie powiodło się"
+		}
+	}
+}
