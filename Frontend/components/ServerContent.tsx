@@ -14,6 +14,7 @@ import { getStrings } from '@/i18n';
 import { api } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import CreateChannelModal from './CreateChannelModal';
+import { translateError } from '@/utils/errorTranslator';
 
 interface Channel {
 	id: string;
@@ -49,13 +50,14 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 			setChannels(data);
 		} catch (err: any) {
 			console.error('Error fetching server channels:', err);
-			const errorMessage = err.response?.data?.error || 'Failed to load channels';
-			setError(errorMessage);
-			Alert.alert('Error', errorMessage);
+			const backendErrorMessage = err.response?.data?.error || Resources.ServerContent.Errors.Failed_To_Load;
+			const localizedErrorMessage = translateError(backendErrorMessage);
+			setError(localizedErrorMessage);
+			Alert.alert(Resources.CreateChannel.Error, localizedErrorMessage);
 		} finally {
 			setLoading(false);
 		}
-	}, [serverId]);
+	}, [serverId, Resources.ServerContent.Errors.Failed_To_Load, Resources.CreateChannel.Error]);
 
 	const checkUserPermissions = useCallback(async () => {
 		if (!currentUser) return;

@@ -15,7 +15,8 @@
 			"Required": "Wszystkie pola są wymagane",
 			"Password_mismatch": "Hasła nie są takie same",
 			"Login_failed": "Logowanie nie powiodło się",
-			"Register_failed": "Rejestracja nie powiodło się"
+			"Register_failed": "Rejestracja nie powiodło się",
+			"Not_authenticated": "Użytkownik nie jest uwierzytelniony"
 		}
 	},
 	"Sidebar": {
@@ -95,7 +96,10 @@
 		"Retry": "Spróbuj ponownie",
 		"Text_Channels": "Kanały tekstowe",
 		"Voice_Channels": "Kanały głosowe",
-		"Select_Channel": "Wybierz kanał, aby rozpocząć rozmowę"
+		"Select_Channel": "Wybierz kanał, aby rozpocząć rozmowę",
+		"Errors": {
+			"Failed_To_Load": "Nie udało się załadować kanałów"
+		}
 	},
 	"CreateChannel": {
 		"Title": "Utwórz kanał",
@@ -109,6 +113,10 @@
 		"Creating": "Tworzenie...",
 		"Success": "Sukces",
 		"Channel_Created": "Kanał utworzony pomyślnie!",
-		"Error": "Błąd"
+		"Error": "Błąd",
+		"Errors": {
+			"Generic": "Wystąpił błąd",
+			"Permission_Denied": "Nie masz uprawnień do wykonania tej akcji"
+		}
 	}
 }

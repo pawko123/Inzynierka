@@ -48,7 +48,7 @@ export default function JoinServerModal({ visible, onClose, onJoinServer }: Join
 
 	const handleJoinServer = async () => {
 		if (!currentUser) {
-			Alert.alert(Resources.JoinServer.Error, 'User not authenticated');
+			Alert.alert(Resources.JoinServer.Error, Resources.Auth.Errors.Not_authenticated);
 			return;
 		}
 

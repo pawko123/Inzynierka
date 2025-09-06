@@ -15,7 +15,8 @@
 			"Required": "All fields are required",
 			"Password_mismatch": "Passwords do not match",
 			"Login_failed": "Login failed",
-			"Register_failed": "Registration failed"
+			"Register_failed": "Registration failed",
+			"Not_authenticated": "User not authenticated"
 		}
 	},
 	"Sidebar": {
@@ -95,7 +96,10 @@
 		"Retry": "Retry",
 		"Text_Channels": "Text Channels",
 		"Voice_Channels": "Voice Channels",
-		"Select_Channel": "Select a channel to start messaging"
+		"Select_Channel": "Select a channel to start messaging",
+		"Errors": {
+			"Failed_To_Load": "Failed to load channels"
+		}
 	},
 	"CreateChannel": {
 		"Title": "Create Channel",
@@ -109,6 +113,10 @@
 		"Creating": "Creating...",
 		"Success": "Success",
 		"Channel_Created": "Channel created successfully!",
-		"Error": "Error"
+		"Error": "Error",
+		"Errors": {
+			"Generic": "An error occurred",
+			"Permission_Denied": "You don't have permission to perform this action"
+		}
 	}
 }

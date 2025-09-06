@@ -14,6 +14,7 @@ import { Button } from '@/components/ui';
 import { getStrings } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
+import { translateError } from '@/utils/errorTranslator';
 
 export type ChannelType = 'text' | 'voice';
 
@@ -36,7 +37,7 @@ export default function CreateChannelModal({ visible, onClose, serverId, onChann
 
 	const handleCreate = async () => {
 		if (!currentUser) {
-			Alert.alert(Resources.CreateChannel.Error, 'User not authenticated');
+			Alert.alert(Resources.CreateChannel.Error, Resources.Auth.Errors.Not_authenticated);
 			return;
 		}
 
@@ -60,8 +61,9 @@ export default function CreateChannelModal({ visible, onClose, serverId, onChann
 			setChannelName(''); // Clear the input
 		} catch (error: any) {
 			console.error('Error creating channel:', error);
-			const errorMessage = error.response?.data?.error || 'An error occurred';
-			Alert.alert(Resources.CreateChannel.Error, errorMessage);
+			const backendErrorMessage = error.response?.data?.error || Resources.CreateChannel.Errors.Generic;
+			const localizedErrorMessage = translateError(backendErrorMessage);
+			Alert.alert(Resources.CreateChannel.Error, localizedErrorMessage);
 		} finally {
 			setIsLoading(false);
 		}

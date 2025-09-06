@@ -62,7 +62,7 @@ export default function CreateModal({
 
 	const handleCreate = async () => {
 		if (!currentUser) {
-			Alert.alert(Resources.CreateModal.Error, 'User not authenticated');
+			Alert.alert(Resources.CreateModal.Error, Resources.Auth.Errors.Not_authenticated);
 			return;
 		}
 
