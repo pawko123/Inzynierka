@@ -7,6 +7,7 @@ export class RoleDto {
 	id: string;
 	name: string;
 	color: string;
+	isDefault: boolean;
 }
 
 export class ServerDto {

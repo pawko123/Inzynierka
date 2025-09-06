@@ -201,13 +201,26 @@ const removeRoleFromMember = async (req: Request, res: Response) => {
 	}
 	try {
 		const memberRoleRepo = AppDataSource.getRepository(MemberRole);
+		
 		const memberRole = await memberRoleRepo.findOne({
 			where: { member: { id: memberId }, role: { id: roleId } },
-			relations: ['member', 'role'],
+			relations: ['member', 'role', 'member.user', 'role.server', 'role.server.owner'],
 		});
+		
 		if (!memberRole) {
 			return res.status(404).json({ error: 'Role not assigned to member.' });
 		}
+
+		const server = memberRole.role.server;
+		const member = memberRole.member;
+		const role = memberRole.role;
+		
+		if (server.owner.id === member.user.id && role.isDefault) {
+			return res.status(400).json({ 
+				error: 'Cannot remove the default role from the server owner.' 
+			});
+		}
+		
 		await memberRoleRepo.remove(memberRole);
 		return res.status(200).json({ message: 'Role removed from member.' });
 	} catch (err) {

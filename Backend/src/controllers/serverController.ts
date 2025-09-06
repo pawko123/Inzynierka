@@ -77,6 +77,7 @@ const createServer = async (req: Request, res: Response) => {
 				id: role.id,
 				name: role.name,
 				color: role.color,
+				isDefault: role.isDefault,
 			})),
 			createdAt: result.createdAt,
 			haveLogo: !!result.logo,
@@ -174,6 +175,7 @@ const getServer = async (req: Request, res: Response) => {
 						id: role.id,
 						name: role.name,
 						color: role.color,
+						isDefault: role.isDefault,
 					}))
 				: [],
 			createdAt: server.createdAt,
@@ -235,6 +237,7 @@ const updateServer = async (req: Request, res: Response) => {
 						id: role.id,
 						name: role.name,
 						color: role.color,
+						isDefault: role.isDefault,
 					}))
 				: [],
 			createdAt: result.createdAt,

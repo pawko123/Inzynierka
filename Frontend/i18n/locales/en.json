@@ -118,5 +118,152 @@
 			"Generic": "An error occurred",
 			"Permission_Denied": "You don't have permission to perform this action"
 		}
+	},
+	"ServerManagement": {
+		"Title": "Server Management",
+		"Manage_Roles": "Manage Roles",
+		"Create_Invite": "Create Invite Link",
+		"Server_Settings": "Server Settings",
+		"Roles": "Roles",
+		"Members": "Members",
+		"Create_Role": "Create Role",
+		"Role_Name": "Role Name",
+		"Role_Color": "Role Color",
+		"Delete_Role": "Delete Role",
+		"Edit_Role": "Edit Role",
+		"Assign_Role": "Assign Role",
+		"Remove_Role": "Remove Role",
+		"Permissions": "Permissions",
+		"Server_Permissions": "Server Permissions",
+		"Channel_Permissions": "Channel Permissions",
+		"Success": "Success",
+		"Invite_Created": "Invite Link Created",
+		"Invite_Copied": "Invite link copied to clipboard!",
+		"Copy_Invite": "Copy Invite",
+		"Invite_Info": "This invite link will expire in 7 days. Share it with people you want to join the server.",
+		"Role_Created": "Role created successfully",
+		"Role_Updated": "Role updated successfully",
+		"Role_Deleted": "Role deleted successfully",
+		"Confirm_Delete": "Are you sure you want to delete this role? This action cannot be undone.",
+		"Default_Role_Badge": "Default - Not Editable",
+		"Cancel": "Cancel",
+		"Save_Changes": "Save Changes",
+		"Saving": "Saving...",
+		"Create": "Create",
+		"Creating": "Creating...",
+		"Delete": "Delete",
+		"Error": "Error",
+		"Manage_Member_Roles": "Manage Member Roles",
+		"Current_Roles": "Current Roles",
+		"Available_Roles": "Available Roles",
+		"No_Roles_Assigned": "No roles assigned",
+		"No_Available_Roles": "No available roles to assign",
+		"Assign": "Assign",
+		"Remove": "Remove",
+		"Manage_Roles_Button": "Manage Roles",
+		"Role_Assigned_Success": "Role assigned successfully",
+		"Role_Removed_Success": "Role removed successfully",
+		"Cannot_Remove_Owner_Default_Role": "Cannot remove the default role from the server owner",
+		"Server_Permissions_Tab": "Server Permissions",
+		"Channel_Permissions_Tab": "Channel Permissions",
+		"Override_Server_Permissions": "Override server permissions for this channel",
+		"Current_Channel_Overrides": "Current Channel Overrides",
+		"Channel_Overrides_Description": "These permissions override the server-wide defaults for specific channels",
+		"Errors": {
+			"Create_Invite_Failed": "Failed to create invite link",
+			"Create_Role_Failed": "Failed to create role",
+			"Update_Role_Failed": "Failed to update role",
+			"Delete_Role_Failed": "Failed to delete role",
+			"Load_Data_Failed": "Failed to load server data",
+			"Default_Role_Protected": "Default roles cannot be deleted"
+		}
+	},
+	"Permissions": {
+		"MANAGE_SERVER": {
+			"Name": "Manage Server",
+			"Description": "Allow users to change server settings"
+		},
+		"KICK_MEMBERS": {
+			"Name": "Kick Members",
+			"Description": "Allow users to kick members from server"
+		},
+		"BAN_MEMBERS": {
+			"Name": "Ban Members",
+			"Description": "Allow users to ban members from server"
+		},
+		"MANAGE_ROLES": {
+			"Name": "Manage Roles",
+			"Description": "Allow users to create and edit roles"
+		},
+		"CREATE_INVITE": {
+			"Name": "Create Invites",
+			"Description": "Allow users to create invite links"
+		},
+		"INVITE_LINKS": {
+			"Name": "Manage Invite Links",
+			"Description": "Allow users to manage and revoke invite links"
+		},
+		"SERVER_MEMBER": {
+			"Name": "Server Member",
+			"Description": "Basic server membership permissions"
+		},
+		"VIEW_CHANNEL": {
+			"Name": "View Channels",
+			"Description": "Allow users to view channels"
+		},
+		"SEND_MESSAGES": {
+			"Name": "Send Messages",
+			"Description": "Allow users to send messages"
+		},
+		"MANAGE_MESSAGES": {
+			"Name": "Manage Messages",
+			"Description": "Allow users to delete and edit messages"
+		},
+		"CONNECT": {
+			"Name": "Connect to Voice",
+			"Description": "Allow users to connect to voice channels"
+		},
+		"SPEAK": {
+			"Name": "Speak in Voice",
+			"Description": "Allow users to speak in voice channels"
+		},
+		"MUTE_MEMBERS": {
+			"Name": "Mute Members",
+			"Description": "Allow users to mute other members"
+		},
+		"DEAFEN_MEMBERS": {
+			"Name": "Deafen Members",
+			"Description": "Allow users to deafen other members"
+		}
+	},
+	"ChannelPermissions": {
+		"VIEW_CHANNEL": {
+			"Name": "View Channel",
+			"Description": "Allow users to view this channel"
+		},
+		"SEND_MESSAGES": {
+			"Name": "Send Messages",
+			"Description": "Allow users to send messages in this channel"
+		},
+		"MANAGE_MESSAGES": {
+			"Name": "Manage Messages",
+			"Description": "Allow users to delete and edit messages in this channel"
+		},
+		"CONNECT": {
+			"Name": "Connect to Voice",
+			"Description": "Allow users to connect to this voice channel"
+		},
+		"SPEAK": {
+			"Name": "Speak in Voice",
+			"Description": "Allow users to speak in this voice channel"
+		},
+		"MUTE_MEMBERS": {
+			"Name": "Mute Members",
+			"Description": "Allow users to mute other members in this channel"
+		},
+		"DEAFEN_MEMBERS": {
+			"Name": "Deafen Members",
+			"Description": "Allow users to deafen other members in this channel"
+		}
 	}
 }

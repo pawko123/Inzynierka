@@ -118,5 +118,152 @@
 			"Generic": "Wystąpił błąd",
 			"Permission_Denied": "Nie masz uprawnień do wykonania tej akcji"
 		}
+	},
+	"ServerManagement": {
+		"Title": "Zarządzanie serwerem",
+		"Manage_Roles": "Zarządzaj rolami",
+		"Create_Invite": "Utwórz link zaproszenia",
+		"Server_Settings": "Ustawienia serwera",
+		"Roles": "Role",
+		"Members": "Członkowie",
+		"Create_Role": "Utwórz rolę",
+		"Role_Name": "Nazwa roli",
+		"Role_Color": "Kolor roli",
+		"Delete_Role": "Usuń rolę",
+		"Edit_Role": "Edytuj rolę",
+		"Assign_Role": "Przypisz rolę",
+		"Remove_Role": "Usuń rolę",
+		"Permissions": "Uprawnienia",
+		"Server_Permissions": "Uprawnienia serwera",
+		"Channel_Permissions": "Uprawnienia kanałów",
+		"Success": "Sukces",
+		"Invite_Created": "Link zaproszenia utworzony",
+		"Invite_Copied": "Link zaproszenia skopiowany do schowka!",
+		"Copy_Invite": "Kopiuj zaproszenie",
+		"Invite_Info": "Ten link zaproszenia wygaśnie za 7 dni. Udostępnij go osobom, które chcesz zaprosić na serwer.",
+		"Role_Created": "Rola utworzona pomyślnie",
+		"Role_Updated": "Rola zaktualizowana pomyślnie",
+		"Role_Deleted": "Rola usunięta pomyślnie",
+		"Confirm_Delete": "Czy na pewno chcesz usunąć tę rolę? Ta akcja nie może być cofnięta.",
+		"Default_Role_Badge": "Domyślna - Nieedytowalna",
+		"Cancel": "Anuluj",
+		"Save_Changes": "Zapisz zmiany",
+		"Saving": "Zapisywanie...",
+		"Create": "Utwórz",
+		"Creating": "Tworzenie...",
+		"Delete": "Usuń",
+		"Error": "Błąd",
+		"Manage_Member_Roles": "Zarządzaj rolami członków",
+		"Current_Roles": "Aktualne role",
+		"Available_Roles": "Dostępne role",
+		"No_Roles_Assigned": "Nie przypisano ról",
+		"No_Available_Roles": "Brak dostępnych ról do przypisania",
+		"Assign": "Przypisz",
+		"Remove": "Usuń",
+		"Manage_Roles_Button": "Zarządzaj rolami",
+		"Role_Assigned_Success": "Rola została pomyślnie przypisana",
+		"Role_Removed_Success": "Rola została pomyślnie usunięta",
+		"Cannot_Remove_Owner_Default_Role": "Nie można usunąć domyślnej roli właściciela serwera",
+		"Server_Permissions_Tab": "Uprawnienia serwera",
+		"Channel_Permissions_Tab": "Uprawnienia kanałów",
+		"Override_Server_Permissions": "Nadpisz uprawnienia serwera dla tego kanału",
+		"Current_Channel_Overrides": "Aktualne nadpisania kanałów",
+		"Channel_Overrides_Description": "Te uprawnienia nadpisują domyślne ustawienia serwera dla określonych kanałów",
+		"Errors": {
+			"Create_Invite_Failed": "Nie udało się utworzyć linku zaproszenia",
+			"Create_Role_Failed": "Nie udało się utworzyć roli",
+			"Update_Role_Failed": "Nie udało się zaktualizować roli",
+			"Delete_Role_Failed": "Nie udało się usunąć roli",
+			"Load_Data_Failed": "Nie udało się załadować danych serwera",
+			"Default_Role_Protected": "Domyślne role nie mogą być usunięte"
+		}
+	},
+	"Permissions": {
+		"MANAGE_SERVER": {
+			"Name": "Zarządzaj serwerem",
+			"Description": "Pozwala użytkownikom zmieniać ustawienia serwera"
+		},
+		"KICK_MEMBERS": {
+			"Name": "Wyrzucaj członków",
+			"Description": "Pozwala użytkownikom wyrzucać członków z serwera"
+		},
+		"BAN_MEMBERS": {
+			"Name": "Banuj członków",
+			"Description": "Pozwala użytkownikom banować członków serwera"
+		},
+		"MANAGE_ROLES": {
+			"Name": "Zarządzaj rolami",
+			"Description": "Pozwala użytkownikom tworzyć i edytować role"
+		},
+		"CREATE_INVITE": {
+			"Name": "Twórz zaproszenia",
+			"Description": "Pozwala użytkownikom tworzyć linki zaproszenia"
+		},
+		"INVITE_LINKS": {
+			"Name": "Zarządzaj zaproszeniami",
+			"Description": "Pozwala użytkownikom zarządzać i anulować linki zaproszeń"
+		},
+		"SERVER_MEMBER": {
+			"Name": "Członek serwera",
+			"Description": "Podstawowe uprawnienia członka serwera"
+		},
+		"VIEW_CHANNEL": {
+			"Name": "Wyświetlaj kanały",
+			"Description": "Pozwala użytkownikom wyświetlać kanały"
+		},
+		"SEND_MESSAGES": {
+			"Name": "Wysyłaj wiadomości",
+			"Description": "Pozwala użytkownikom wysyłać wiadomości"
+		},
+		"MANAGE_MESSAGES": {
+			"Name": "Zarządzaj wiadomościami",
+			"Description": "Pozwala użytkownikom usuwać i edytować wiadomości"
+		},
+		"CONNECT": {
+			"Name": "Łącz z głosem",
+			"Description": "Pozwala użytkownikom łączyć się z kanałami głosowymi"
+		},
+		"SPEAK": {
+			"Name": "Mów na głosie",
+			"Description": "Pozwala użytkownikom mówić na kanałach głosowych"
+		},
+		"MUTE_MEMBERS": {
+			"Name": "Wyciszaj członków",
+			"Description": "Pozwala użytkownikom wyciszać innych członków"
+		},
+		"DEAFEN_MEMBERS": {
+			"Name": "Ogłuszaj członków",
+			"Description": "Pozwala użytkownikom ogłuszać innych członków"
+		}
+	},
+	"ChannelPermissions": {
+		"VIEW_CHANNEL": {
+			"Name": "Wyświetlaj kanał",
+			"Description": "Pozwala użytkownikom wyświetlać ten kanał"
+		},
+		"SEND_MESSAGES": {
+			"Name": "Wysyłaj wiadomości",
+			"Description": "Pozwala użytkownikom wysyłać wiadomości na tym kanale"
+		},
+		"MANAGE_MESSAGES": {
+			"Name": "Zarządzaj wiadomościami",
+			"Description": "Pozwala użytkownikom usuwać i edytować wiadomości na tym kanale"
+		},
+		"CONNECT": {
+			"Name": "Łącz z głosem",
+			"Description": "Pozwala użytkownikom łączyć się z tym kanałem głosowym"
+		},
+		"SPEAK": {
+			"Name": "Mów na głosie",
+			"Description": "Pozwala użytkownikom mówić na tym kanale głosowym"
+		},
+		"MUTE_MEMBERS": {
+			"Name": "Wyciszaj członków",
+			"Description": "Pozwala użytkownikom wyciszać innych członków na tym kanale"
+		},
+		"DEAFEN_MEMBERS": {
+			"Name": "Ogłuszaj członków",
+			"Description": "Pozwala użytkownikom ogłuszać innych członków na tym kanale"
+		}
 	}
 }

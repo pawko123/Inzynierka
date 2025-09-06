@@ -15,6 +15,8 @@ import { api } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import CreateChannelModal from './CreateChannelModal';
 import { translateError } from '@/utils/errorTranslator';
+import ServerActionButtons from './ServerActionButtons';
+import RolesManagement from './RolesManagement';
 
 interface Channel {
 	id: string;
@@ -40,6 +42,9 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 	const [error, setError] = useState<string | null>(null);
 	const [showCreateChannelModal, setShowCreateChannelModal] = useState(false);
 	const [canManageServer, setCanManageServer] = useState(false);
+	const [canManageRoles, setCanManageRoles] = useState(false);
+	const [canCreateInvite, setCanCreateInvite] = useState(false);
+	const [showRolesManagement, setShowRolesManagement] = useState(false);
 
 	const fetchServerChannels = useCallback(async () => {
 		try {
@@ -67,13 +72,17 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 			const { data } = await api.post('/server/getUserPermissions', {
 				serverId: serverId,
 				userId: currentUser.id,
-				permissions: ['MANAGE_SERVER']
+				permissions: ['MANAGE_SERVER', 'MANAGE_ROLES', 'CREATE_INVITE']
 			});
 			setCanManageServer(data.MANAGE_SERVER || false);
+			setCanManageRoles(data.MANAGE_ROLES || false);
+			setCanCreateInvite(data.CREATE_INVITE || false);
 		} catch (err: any) {
 			console.error('Error checking user permissions:', err);
 			// If we can't check permissions, assume they don't have them for safety
 			setCanManageServer(false);
+			setCanManageRoles(false);
+			setCanCreateInvite(false);
 		}
 	}, [serverId, currentUser]);
 
@@ -94,6 +103,10 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 	const handleChannelCreated = (newChannel: any) => {
 		// Add the new channel to the list and refetch to ensure we have all data
 		fetchServerChannels();
+	};
+
+	const handleManageRoles = () => {
+		setShowRolesManagement(true);
 	};
 
 	const renderChannelItem = ({ item }: { item: Channel }) => (
@@ -130,6 +143,12 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 						<Text style={[styles.serverName, { color: colors.text }]}>
 							{serverName || 'Server'}
 						</Text>
+						<ServerActionButtons
+							serverId={serverId}
+							canManageRoles={canManageRoles}
+							canCreateInvite={canCreateInvite}
+							onManageRoles={handleManageRoles}
+						/>
 					</View>
 
 				{loading ? (
@@ -212,11 +231,19 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 
 			{/* Main Content Area */}
 			<View style={[styles.mainContent, { backgroundColor: colors.background }]}>
-				<View style={styles.welcomeContainer}>
-					<Text style={[styles.welcomeText, { color: colors.tabIconDefault }]}>
-						{Resources.ServerContent.Select_Channel}
-					</Text>
-				</View>
+				{showRolesManagement ? (
+					<RolesManagement
+						serverId={serverId}
+						serverName={serverName || 'Server'}
+						onClose={() => setShowRolesManagement(false)}
+					/>
+				) : (
+					<View style={styles.welcomeContainer}>
+						<Text style={[styles.welcomeText, { color: colors.tabIconDefault }]}>
+							{Resources.ServerContent.Select_Channel}
+						</Text>
+					</View>
+				)}
 			</View>
 		</View>
 
@@ -240,12 +267,16 @@ const styles = StyleSheet.create({
 		borderRightWidth: 1,
 	},
 	serverHeader: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		alignItems: 'center',
 		padding: 16,
 		borderBottomWidth: 1,
 	},
 	serverName: {
 		fontSize: 18,
 		fontWeight: 'bold',
+		flex: 1,
 	},
 	channelsContainer: {
 		flex: 1,

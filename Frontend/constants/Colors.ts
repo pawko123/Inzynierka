@@ -19,6 +19,7 @@ export const Colors = {
 		border: '#E5E5E5',
 		link: tintColorLight,
 		placeholder: '#9AA0A6',
+		destructive: '#DC3545',
 	},
 	dark: {
 		text: '#ECEDEE',
@@ -32,5 +33,6 @@ export const Colors = {
 		border: '#2A2F34',
 		link: tintColorDark,
 		placeholder: '#9BA1A6',
+		destructive: '#DC3545',
 	},
 };

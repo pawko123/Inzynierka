@@ -22,6 +22,11 @@ export const translateError = (errorMessage: string): string => {
 		return Resources.Auth.Errors.Not_authenticated;
 	}
 	
+	// Check for role-specific errors
+	if (errorMessage.includes('Cannot remove the default role from the server owner')) {
+		return Resources.ServerManagement.Cannot_Remove_Owner_Default_Role;
+	}
+	
 	// Check for validation errors - keep specific messages as they may contain useful info
 	if (errorMessage.includes('required') || 
 	    errorMessage.includes('invalid') ||
