@@ -10,6 +10,7 @@
 		"Repeat_password": "Powtórz hasło",
 		"Creating": "Tworzenie...",
 		"Have_account": "Masz konto? Zaloguj się",
+		"Logout": "Wyloguj",
 		"Errors": {
 			"Required": "Wszystkie pola są wymagane",
 			"Password_mismatch": "Hasła nie są takie same",
@@ -87,5 +88,27 @@
 		"Invite_Not_Found": "Zaproszenie nie zostało znalezione lub jest nieprawidłowe",
 		"Invite_Expired": "To zaproszenie wygasło",
 		"Already_Member": "Jesteś już członkiem tego serwera"
+	},
+	"ServerContent": {
+		"No_Channels": "Nie znaleziono kanałów",
+		"Loading_Channels": "Ładowanie kanałów...",
+		"Retry": "Spróbuj ponownie",
+		"Text_Channels": "Kanały tekstowe",
+		"Voice_Channels": "Kanały głosowe",
+		"Select_Channel": "Wybierz kanał, aby rozpocząć rozmowę"
+	},
+	"CreateChannel": {
+		"Title": "Utwórz kanał",
+		"Text_Channel": "Kanał tekstowy",
+		"Voice_Channel": "Kanał głosowy",
+		"Channel_Name": "Nazwa kanału",
+		"Channel_Name_Placeholder": "Wprowadź nazwę kanału",
+		"Channel_Name_Required": "Nazwa kanału jest wymagana",
+		"Create_Channel": "Utwórz kanał",
+		"Cancel": "Anuluj",
+		"Creating": "Tworzenie...",
+		"Success": "Sukces",
+		"Channel_Created": "Kanał utworzony pomyślnie!",
+		"Error": "Błąd"
 	}
 }

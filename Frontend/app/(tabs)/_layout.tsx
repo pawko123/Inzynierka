@@ -4,8 +4,10 @@ import { View, StyleSheet } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import ServerSidebar from '@/components/ServerSidebar';
 import WelcomeScreen from '@/components/WelcomeScreen';
+import ServerContent from '@/components/ServerContent';
 import CreateModal, { CreateType } from '@/components/CreateModal';
 import JoinServerModal from '@/components/JoinServerModal';
+import type { Server } from '@/types/sidebar';
 
 function GuardedTabs({ children }: { children: React.ReactNode }) {
 	const { token, loading } = useAuth();
@@ -18,15 +20,24 @@ export default function TabLayout() {
 	const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
 	const [isJoinServerModalVisible, setIsJoinServerModalVisible] = useState(false);
 	const [createModalType, setCreateModalType] = useState<CreateType>('server');
+	const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
+	const [selectedServerName, setSelectedServerName] = useState<string>('');
 
-	const handleServerSelect = (serverId: string) => {
-		console.log('Selected server:', serverId);
-		// TODO: Navigate to server view or update context
+	const handleServerSelect = (server: Server) => {
+		console.log('Selected server:', server);
+		setSelectedServerId(server.id);
+		setSelectedServerName(server.name);
 	};
 
 	const handleDirectChannelSelect = (channelId: string) => {
 		console.log('Selected direct channel:', channelId);
 		// TODO: Navigate to direct channel view or update context
+		setSelectedServerId(null); // Clear server selection when selecting direct channel
+	};
+
+	const handleChannelSelect = (channelId: string) => {
+		console.log('Selected channel:', channelId);
+		// TODO: Navigate to channel view or update context
 	};
 
 	const handleCreateServer = () => {
@@ -68,11 +79,19 @@ export default function TabLayout() {
 					onCreateDirectMessage={handleCreateDirectChannel}
 				/>
 				<View style={styles.mainContent}>
-					<WelcomeScreen 
-						onCreateServer={handleCreateServer}
-						onCreateDirectChannel={handleCreateDirectChannel}
-						onJoinServer={handleJoinServer}
-					/>
+					{selectedServerId ? (
+						<ServerContent 
+							serverId={selectedServerId}
+							serverName={selectedServerName}
+							onChannelSelect={handleChannelSelect}
+						/>
+					) : (
+						<WelcomeScreen 
+							onCreateServer={handleCreateServer}
+							onCreateDirectChannel={handleCreateDirectChannel}
+							onJoinServer={handleJoinServer}
+						/>
+					)}
 				</View>
 			</View>
 

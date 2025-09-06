@@ -5,6 +5,7 @@ import {
 	StyleSheet,
 	ScrollView,
 	ActivityIndicator,
+	TouchableOpacity,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
@@ -17,7 +18,7 @@ import type { Server, DirectChannel } from '@/types/sidebar';
 import { getStrings } from '@/i18n';
 
 interface ServerSidebarProps {
-	onServerSelect?: (serverId: string) => void;
+	onServerSelect?: (server: Server) => void;
 	onDirectChannelSelect?: (channelId: string) => void;
 	onAddServer?: () => void;
 	onCreateDirectMessage?: () => void;
@@ -30,13 +31,21 @@ export default function ServerSidebar({
 	onCreateDirectMessage 
 }: ServerSidebarProps) {
 	const colorScheme = useColorScheme();
-	const { currentUser } = useAuth();
+	const { currentUser, signOut } = useAuth();
 	const [servers, setServers] = useState<Server[]>([]);
 	const [directChannels, setDirectChannels] = useState<DirectChannel[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
 	const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
 	const Resources = getStrings();
+
+	const handleLogout = async () => {
+		try {
+			await signOut();
+		} catch (error) {
+			console.error('Logout error:', error);
+		}
+	};
 
 	const fetchUserData = useCallback(async () => {
 		try {
@@ -62,10 +71,10 @@ export default function ServerSidebar({
 		}
 	}, [currentUser, fetchUserData]);
 
-	const handleServerPress = (serverId: string) => {
-		setSelectedServerId(serverId);
+	const handleServerPress = (server: Server) => {
+		setSelectedServerId(server.id);
 		setSelectedChannelId(null);
-		onServerSelect?.(serverId);
+		onServerSelect?.(server);
 	};
 
 	const handleDirectChannelPress = (channelId: string) => {
@@ -148,6 +157,16 @@ export default function ServerSidebar({
 				onAddServer={onAddServer}
 				onCreateDirectMessage={onCreateDirectMessage}
 			/>
+			
+			{/* Logout Button */}
+			<TouchableOpacity 
+				style={[styles.logoutButton, { backgroundColor: '#FF4444' }]} 
+				onPress={handleLogout}
+			>
+				<Text style={[styles.logoutText, { color: '#FFFFFF' }]}>
+					{Resources.Auth.Logout}
+				</Text>
+			</TouchableOpacity>
 		</View>
 	);
 }
@@ -195,5 +214,19 @@ const styles = StyleSheet.create({
 		textAlign: 'center',
 		fontStyle: 'italic',
 		lineHeight: 16,
+	},
+	logoutButton: {
+		width: '100%',
+		paddingVertical: 8,
+		paddingHorizontal: 12,
+		borderRadius: 6,
+		marginTop: 8,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	logoutText: {
+		fontSize: 10,
+		fontWeight: '600',
+		textTransform: 'uppercase',
 	},
 });

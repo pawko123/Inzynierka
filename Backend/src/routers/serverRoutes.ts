@@ -33,8 +33,9 @@ serverRouter.get(
 serverRouter.get(
 	'/getChannels',
 	verifyTokenMiddleware,
-	checkUserPermission(PermissionType.MANAGE_SERVER),
+	checkUserPermission(PermissionType.SERVER_MEMBER),
 	serverController.getServerChannels,
 );
+serverRouter.post('/getUserPermissions', verifyTokenMiddleware, serverController.getUserPermissions);
 
 export default serverRouter;

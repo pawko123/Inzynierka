@@ -8,7 +8,7 @@ import { getStrings } from '@/i18n';
 interface ServerItemProps {
 	server: Server;
 	isSelected: boolean;
-	onPress: (serverId: string) => void;
+	onPress: (server: Server) => void;
 }
 
 export default function ServerItem({ server, isSelected, onPress }: ServerItemProps) {
@@ -60,7 +60,7 @@ export default function ServerItem({ server, isSelected, onPress }: ServerItemPr
 					backgroundColor: Colors[colorScheme ?? 'light'].tabIconSelected + '20',
 				},
 			]}
-			onPress={() => onPress(server.id)}
+			onPress={() => onPress(server)}
 			activeOpacity={0.7}
 		>
 			{getServerIcon()}

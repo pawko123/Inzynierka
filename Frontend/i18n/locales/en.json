@@ -10,6 +10,7 @@
 		"Repeat_password": "Repeat Password",
 		"Creating": "Creating...",
 		"Have_account": "Have an account? Sign in",
+		"Logout": "Logout",
 		"Errors": {
 			"Required": "All fields are required",
 			"Password_mismatch": "Passwords do not match",
@@ -87,5 +88,27 @@
 		"Invite_Not_Found": "Invite not found or invalid",
 		"Invite_Expired": "This invite has expired",
 		"Already_Member": "You are already a member of this server"
+	},
+	"ServerContent": {
+		"No_Channels": "No channels found",
+		"Loading_Channels": "Loading channels...",
+		"Retry": "Retry",
+		"Text_Channels": "Text Channels",
+		"Voice_Channels": "Voice Channels",
+		"Select_Channel": "Select a channel to start messaging"
+	},
+	"CreateChannel": {
+		"Title": "Create Channel",
+		"Text_Channel": "Text Channel",
+		"Voice_Channel": "Voice Channel",
+		"Channel_Name": "Channel Name",
+		"Channel_Name_Placeholder": "Enter channel name",
+		"Channel_Name_Required": "Channel name is required",
+		"Create_Channel": "Create Channel",
+		"Cancel": "Cancel",
+		"Creating": "Creating...",
+		"Success": "Success",
+		"Channel_Created": "Channel created successfully!",
+		"Error": "Error"
 	}
 }

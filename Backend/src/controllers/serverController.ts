@@ -6,6 +6,8 @@ import { User } from '../models/User';
 import { MemberRole } from '../models/MemberRole';
 import { ServerMember } from '../models/ServerMember';
 import { ServerDto } from './dto/server/serverResponse.dto';
+import { checkUserPermissions } from '../utils/permissionChecker';
+import { PermissionType } from '../models/RolePermissionType';
 
 const createServer = async (req: Request, res: Response) => {
 	const { name, userId } = req.body;
@@ -307,6 +309,41 @@ const getServerChannels = async (req: Request, res: Response) => {
 	}
 };
 
+const getUserPermissions = async (req: Request, res: Response) => {
+	try {
+		const { serverId, userId, permissions } = req.body;
+		
+		if (!serverId || !userId) {
+			return res.status(400).json({ error: 'Missing serverId or userId.' });
+		}
+
+		// Parse permissions array from body
+		let permissionsToCheck: string[] = [];
+		if (permissions) {
+			if (Array.isArray(permissions)) {
+				permissionsToCheck = permissions as string[];
+			} else {
+				permissionsToCheck = [permissions as string];
+			}
+		} else {
+			// Default: check all permissions
+			permissionsToCheck = Object.values(PermissionType);
+		}
+
+		const result = await checkUserPermissions(
+			String(userId),
+			String(serverId),
+			undefined,
+			permissionsToCheck
+		);
+
+		return res.status(200).json(result);
+	} catch (err) {
+		console.error('Error checking user permissions:', err);
+		return res.status(500).json({ error: 'Internal server error.' });
+	}
+};
+
 export const serverController = {
 	createServer,
 	deleteServer,
@@ -315,4 +352,5 @@ export const serverController = {
 	getServer,
 	getServerMembers,
 	getServerChannels,
+	getUserPermissions,
 };
