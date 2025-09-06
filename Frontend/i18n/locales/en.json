@@ -16,5 +16,76 @@
 			"Login_failed": "Login failed",
 			"Register_failed": "Registration failed"
 		}
+	},
+	"Sidebar": {
+		"Servers": "Servers",
+		"Direct_Messages": "Direct Messages",
+		"No_content": "No servers or direct channels found",
+		"Loading": "Loading...",
+		"Errors": {
+			"Fetch_failed": "Error fetching user data",
+			"Icon_load_failed": "Failed to load server icon, falling back to letter"
+		}
+	},
+	"Welcome": {
+		"Title": "Welcome to your Chat App!",
+		"Subtitle": "Get started by creating a server, joining one, or starting a direct conversation.",
+		"Info": "You can always access these options from the sidebar or settings.",
+		"Actions": {
+			"Create_Server": "Create a Server",
+			"Join_Server": "Join a Server",
+			"Create_Direct_Channel": "Start Direct Message"
+		}
+	},
+	"CreateModal": {
+		"Title": "Create New",
+		"Server": "Server",
+		"Direct_Channel": "Direct Channel",
+		"Server_Name": "Server Name",
+		"Server_Name_Required": "Server name is required",
+		"Server_Logo": "Server Logo",
+		"Choose_Image": "Choose Image",
+		"Logo_Preview": "Logo Preview:",
+		"Channel_Name": "Channel Name",
+		"Channel_Name_Required": "Channel name is required",
+		"User_ID": "User ID",
+		"User_ID_Required": "User ID is required",
+		"User_ID_Placeholder": "Enter user ID to invite",
+		"Cancel": "Cancel",
+		"Create": "Create",
+		"Create_Server": "Create Server",
+		"Create_Channel": "Create Channel",
+		"Required_Fields": "Please fill in all required fields",
+		"Server_Created": "Server created successfully!",
+		"Channel_Created": "Direct channel created successfully!",
+		"Creating_Server": "Creating Server...",
+		"Creating_Channel": "Creating Channel...",
+		"Permission_Required": "Permission Required",
+		"Permission_Message": "You need to grant permission to access your photo library to select an image.",
+		"Camera_Permission_Message": "You need to grant camera permission to take photos.",
+		"Select_Image_Source": "Select image source",
+		"Camera": "Camera",
+		"Photo_Library": "Photo Library",
+		"Error": "Error",
+		"Permission_Error": "Failed to request permission",
+		"Camera_Error": "Failed to launch camera",
+		"Library_Error": "Failed to launch image library"
+	},
+	"JoinServer": {
+		"Title": "Join Server",
+		"Description": "Enter an invite link to join a server. You can get invite links from server members or administrators.",
+		"Invite_Link": "Invite Link",
+		"Invite_Placeholder": "Enter invite link or code",
+		"Invite_Required": "Invite link is required",
+		"Invalid_Invite": "Invalid invite link format",
+		"Join_Server": "Join Server",
+		"Joining": "Joining...",
+		"Cancel": "Cancel",
+		"Success": "Success",
+		"Joined_Successfully": "Successfully joined the server!",
+		"Error": "Error",
+		"Invite_Not_Found": "Invite not found or invalid",
+		"Invite_Expired": "This invite has expired",
+		"Already_Member": "You are already a member of this server"
 	}
 }

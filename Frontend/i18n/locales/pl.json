@@ -16,5 +16,76 @@
 			"Login_failed": "Logowanie nie powiodło się",
 			"Register_failed": "Rejestracja nie powiodło się"
 		}
+	},
+	"Sidebar": {
+		"Servers": "Serwery",
+		"Direct_Messages": "Wiadomości prywatne",
+		"No_content": "Nie znaleziono serwerów ani kanałów prywatnych",
+		"Loading": "Ładowanie...",
+		"Errors": {
+			"Fetch_failed": "Błąd podczas pobierania danych użytkownika",
+			"Icon_load_failed": "Nie udało się załadować ikony serwera, używanie pierwszej litery"
+		}
+	},
+	"Welcome": {
+		"Title": "Witaj w swojej aplikacji czatu!",
+		"Subtitle": "Zacznij od utworzenia serwera, dołączenia do jednego lub rozpoczęcia prywatnej rozmowy.",
+		"Info": "Zawsze możesz uzyskać dostęp do tych opcji z paska bocznego lub ustawień.",
+		"Actions": {
+			"Create_Server": "Utwórz serwer",
+			"Join_Server": "Dołącz do serwera",
+			"Create_Direct_Channel": "Rozpocznij rozmowę prywatną"
+		}
+	},
+	"CreateModal": {
+		"Title": "Utwórz nowy",
+		"Server": "Serwer",
+		"Direct_Channel": "Kanał prywatny",
+		"Server_Name": "Nazwa serwera",
+		"Server_Name_Required": "Nazwa serwera jest wymagana",
+		"Server_Logo": "Logo serwera",
+		"Choose_Image": "Wybierz obraz",
+		"Logo_Preview": "Podgląd logo:",
+		"Channel_Name": "Nazwa kanału",
+		"Channel_Name_Required": "Nazwa kanału jest wymagana",
+		"User_ID": "ID użytkownika",
+		"User_ID_Required": "ID użytkownika jest wymagane",
+		"User_ID_Placeholder": "Wprowadź ID użytkownika do zaproszenia",
+		"Cancel": "Anuluj",
+		"Create": "Utwórz",
+		"Create_Server": "Utwórz serwer",
+		"Create_Channel": "Utwórz kanał",
+		"Required_Fields": "Proszę wypełnić wszystkie wymagane pola",
+		"Server_Created": "Serwer został utworzony pomyślnie!",
+		"Channel_Created": "Kanał prywatny został utworzony pomyślnie!",
+		"Creating_Server": "Tworzenie serwera...",
+		"Creating_Channel": "Tworzenie kanału...",
+		"Permission_Required": "Wymagane uprawnienia",
+		"Permission_Message": "Musisz udzielić uprawnień do dostępu do biblioteki zdjęć, aby wybrać obraz.",
+		"Camera_Permission_Message": "Musisz udzielić uprawnień do aparatu, aby robić zdjęcia.",
+		"Select_Image_Source": "Wybierz źródło obrazu",
+		"Camera": "Aparat",
+		"Photo_Library": "Biblioteka zdjęć",
+		"Error": "Błąd",
+		"Permission_Error": "Nie udało się uzyskać uprawnień",
+		"Camera_Error": "Nie udało się uruchomić aparatu",
+		"Library_Error": "Nie udało się uruchomić biblioteki zdjęć"
+	},
+	"JoinServer": {
+		"Title": "Dołącz do serwera",
+		"Description": "Wprowadź link zaproszenia, aby dołączyć do serwera. Możesz otrzymać linki zaproszeń od członków serwera lub administratorów.",
+		"Invite_Link": "Link zaproszenia",
+		"Invite_Placeholder": "Wprowadź link zaproszenia lub kod",
+		"Invite_Required": "Link zaproszenia jest wymagany",
+		"Invalid_Invite": "Nieprawidłowy format linku zaproszenia",
+		"Join_Server": "Dołącz do serwera",
+		"Joining": "Dołączanie...",
+		"Cancel": "Anuluj",
+		"Success": "Sukces",
+		"Joined_Successfully": "Pomyślnie dołączono do serwera!",
+		"Error": "Błąd",
+		"Invite_Not_Found": "Zaproszenie nie zostało znalezione lub jest nieprawidłowe",
+		"Invite_Expired": "To zaproszenie wygasło",
+		"Already_Member": "Jesteś już członkiem tego serwera"
 	}
 }
