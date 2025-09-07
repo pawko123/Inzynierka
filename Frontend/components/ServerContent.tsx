@@ -3,9 +3,6 @@ import {
 	View,
 	Text,
 	StyleSheet,
-	FlatList,
-	TouchableOpacity,
-	ActivityIndicator,
 	Alert,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -14,8 +11,8 @@ import { getStrings } from '@/i18n';
 import { api } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import CreateChannelModal from './CreateChannelModal';
+import ChannelSidebar from './ChannelSidebar';
 import { translateError } from '@/utils/errorTranslator';
-import ServerActionButtons from './ServerActionButtons';
 import RolesManagement from './RolesManagement';
 
 interface Channel {
@@ -109,125 +106,24 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 		setShowRolesManagement(true);
 	};
 
-	const renderChannelItem = ({ item }: { item: Channel }) => (
-		<TouchableOpacity
-			style={[styles.channelItem, { backgroundColor: colors.background }]}
-			onPress={() => handleChannelPress(item)}
-		>
-			<View style={styles.channelIcon}>
-				<Text style={[styles.channelIconText, { color: colors.text }]}>
-					{item.type === 'voice' ? '🔊' : '#'}
-				</Text>
-			</View>
-			<Text style={[styles.channelName, { color: colors.text }]}>
-				{item.name}
-			</Text>
-		</TouchableOpacity>
-	);
-
-	const renderEmptyState = () => (
-		<View style={styles.emptyState}>
-			<Text style={[styles.emptyText, { color: colors.tabIconDefault }]}>
-				{Resources.ServerContent.No_Channels}
-			</Text>
-		</View>
-	);
-
 	return (
 		<>
 			<View style={[styles.container, { backgroundColor: colors.background }]}>
 				{/* Channel Sidebar */}
-				<View style={[styles.channelSidebar, { backgroundColor: colors.background, borderRightColor: colors.border }]}>
-					{/* Server Header */}
-					<View style={[styles.serverHeader, { borderBottomColor: colors.border }]}>
-						<Text style={[styles.serverName, { color: colors.text }]}>
-							{serverName || 'Server'}
-						</Text>
-						<ServerActionButtons
-							serverId={serverId}
-							canManageRoles={canManageRoles}
-							canCreateInvite={canCreateInvite}
-							onManageRoles={handleManageRoles}
-						/>
-					</View>
-
-				{loading ? (
-					<View style={styles.loadingContainer}>
-						<ActivityIndicator size="small" color={colors.tint} />
-						<Text style={[styles.loadingText, { color: colors.tabIconDefault }]}>
-							{Resources.ServerContent.Loading_Channels}
-						</Text>
-					</View>
-				) : error ? (
-					<View style={styles.errorContainer}>
-						<Text style={[styles.errorText, { color: colors.text }]}>
-							{error}
-						</Text>
-						<TouchableOpacity
-							style={[styles.retryButton, { backgroundColor: colors.tint }]}
-							onPress={fetchServerChannels}
-						>
-							<Text style={styles.retryButtonText}>
-								{Resources.ServerContent.Retry}
-							</Text>
-						</TouchableOpacity>
-					</View>
-				) : (
-					<View style={styles.channelsContainer}>
-						{/* Text Channels Section */}
-						<View style={styles.channelSection}>
-							<View style={styles.sectionHeader}>
-								<Text style={[styles.sectionTitle, { color: colors.tabIconDefault }]}>
-									{Resources.ServerContent.Text_Channels}
-								</Text>
-								{canManageServer && (
-									<TouchableOpacity
-										style={styles.addChannelButton}
-										onPress={handleCreateChannel}
-									>
-										<Text style={[styles.addChannelButtonText, { color: colors.tabIconDefault }]}>
-											+
-										</Text>
-									</TouchableOpacity>
-								)}
-							</View>
-							<FlatList
-								data={channels.filter(channel => channel.type !== 'voice')}
-								renderItem={renderChannelItem}
-								keyExtractor={(item) => item.id}
-								ListEmptyComponent={renderEmptyState}
-								showsVerticalScrollIndicator={false}
-							/>
-						</View>
-
-						{/* Voice Channels Section */}
-						<View style={styles.channelSection}>
-							<View style={styles.sectionHeader}>
-								<Text style={[styles.sectionTitle, { color: colors.tabIconDefault }]}>
-									{Resources.ServerContent.Voice_Channels}
-								</Text>
-								{canManageServer && (
-									<TouchableOpacity
-										style={styles.addChannelButton}
-										onPress={handleCreateChannel}
-									>
-										<Text style={[styles.addChannelButtonText, { color: colors.tabIconDefault }]}>
-											+
-										</Text>
-									</TouchableOpacity>
-								)}
-							</View>
-							<FlatList
-								data={channels.filter(channel => channel.type === 'voice')}
-								renderItem={renderChannelItem}
-								keyExtractor={(item) => item.id}
-								ListEmptyComponent={renderEmptyState}
-								showsVerticalScrollIndicator={false}
-							/>
-						</View>
-					</View>
-				)}
-			</View>
+				<ChannelSidebar
+					serverId={serverId}
+					serverName={serverName}
+					channels={channels}
+					loading={loading}
+					error={error}
+					canManageServer={canManageServer}
+					canManageRoles={canManageRoles}
+					canCreateInvite={canCreateInvite}
+					onChannelPress={handleChannelPress}
+					onAddChannel={handleCreateChannel}
+					onManageRoles={handleManageRoles}
+					onRetry={fetchServerChannels}
+				/>
 
 			{/* Main Content Area */}
 			<View style={[styles.mainContent, { backgroundColor: colors.background }]}>
@@ -262,53 +158,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		flexDirection: 'row',
 	},
-	channelSidebar: {
-		width: 240,
-		borderRightWidth: 1,
-	},
-	serverHeader: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		padding: 16,
-		borderBottomWidth: 1,
-	},
-	serverName: {
-		fontSize: 18,
-		fontWeight: 'bold',
-		flex: 1,
-	},
-	channelsContainer: {
-		flex: 1,
-		padding: 8,
-	},
-	channelSection: {
-		marginBottom: 16,
-	},
-	sectionHeader: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		paddingHorizontal: 8,
-		marginBottom: 4,
-	},
-	sectionTitle: {
-		fontSize: 12,
-		fontWeight: '600',
-		textTransform: 'uppercase',
-		letterSpacing: 0.5,
-	},
-	addChannelButton: {
-		width: 20,
-		height: 20,
-		justifyContent: 'center',
-		alignItems: 'center',
-		borderRadius: 2,
-	},
-	addChannelButtonText: {
-		fontSize: 16,
-		fontWeight: 'bold',
-	},
 	mainContent: {
 		flex: 1,
 	},
@@ -319,65 +168,6 @@ const styles = StyleSheet.create({
 	},
 	welcomeText: {
 		fontSize: 16,
-		textAlign: 'center',
-	},
-	loadingContainer: {
-		flex: 1,
-		justifyContent: 'center',
-		alignItems: 'center',
-		gap: 12,
-	},
-	loadingText: {
-		fontSize: 14,
-	},
-	errorContainer: {
-		flex: 1,
-		justifyContent: 'center',
-		alignItems: 'center',
-		padding: 20,
-		gap: 16,
-	},
-	errorText: {
-		fontSize: 14,
-		textAlign: 'center',
-	},
-	retryButton: {
-		paddingHorizontal: 16,
-		paddingVertical: 8,
-		borderRadius: 6,
-	},
-	retryButtonText: {
-		color: 'white',
-		fontWeight: '600',
-		fontSize: 14,
-	},
-	channelItem: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		paddingVertical: 6,
-		paddingHorizontal: 8,
-		borderRadius: 4,
-		marginBottom: 1,
-	},
-	channelIcon: {
-		width: 16,
-		alignItems: 'center',
-		marginRight: 6,
-	},
-	channelIconText: {
-		fontSize: 14,
-		fontWeight: '500',
-	},
-	channelName: {
-		fontSize: 14,
-		flex: 1,
-	},
-	emptyState: {
-		paddingVertical: 20,
-		alignItems: 'center',
-	},
-	emptyText: {
-		fontSize: 12,
 		textAlign: 'center',
 	},
 });

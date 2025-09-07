@@ -4,11 +4,8 @@ import {
 	Text,
 	StyleSheet,
 	TouchableOpacity,
-	FlatList,
 	ActivityIndicator,
 	Alert,
-	Modal,
-	ScrollView,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
@@ -17,6 +14,9 @@ import { api } from '@/services/api';
 import { translateError } from '@/utils/errorTranslator';
 import CreateRoleModal from './CreateRoleModal';
 import RoleDetailsModal from './RoleDetailsModal';
+import MemberRoleModal from './MemberRoleModal';
+import ServerRolesTab from './ServerRolesTab';
+import ServerMembersTab from './ServerMembersTab';
 import { createPermissionCategories } from '@/utils/permissions';
 
 interface Role {
@@ -61,7 +61,6 @@ export default function RolesManagement({
 	const [showMemberRoleModal, setShowMemberRoleModal] = useState(false);
 	const [assigningRoles, setAssigningRoles] = useState<Set<string>>(new Set());
 	const [removingRoles, setRemovingRoles] = useState<Set<string>>(new Set());
-	const [openingMemberManager, setOpeningMemberManager] = useState<string | null>(null);
 
 	// Permission categories for UI organization
 	const permissionCategories = useMemo(() => createPermissionCategories(Resources), [Resources]);
@@ -199,16 +198,6 @@ export default function RolesManagement({
 		}
 	};
 
-	const openMemberRoleManager = (member: ServerMember) => {
-		setOpeningMemberManager(member.id);
-		// Add a small delay to show loading state
-		setTimeout(() => {
-			setSelectedMember(member);
-			setShowMemberRoleModal(true);
-			setOpeningMemberManager(null);
-		}, 300);
-	};
-
 	const handleDeleteRole = async (roleId: string) => {
 		Alert.alert(
 			Resources.ServerManagement.Delete_Role,
@@ -236,74 +225,6 @@ export default function RolesManagement({
 			]
 		);
 	};
-
-	const renderRoleItem = ({ item }: { item: Role }) => (
-		<TouchableOpacity
-			style={[
-				styles.roleItem, 
-				{ backgroundColor: colors.card, borderColor: colors.border },
-				item.isDefault && styles.disabledRoleItem
-			]}
-			onPress={() => !item.isDefault && setSelectedRole(item)}
-			disabled={item.isDefault}
-		>
-			<View style={styles.roleHeader}>
-				<View style={[styles.roleColorIndicator, { backgroundColor: item.color }]} />
-				<Text style={[styles.roleName, { color: colors.text }]}>{item.name}</Text>
-				{item.isDefault && (
-					<Text style={[styles.defaultBadge, { color: colors.tabIconDefault }]}>
-						({Resources.ServerManagement.Default_Role_Badge})
-					</Text>
-				)}
-			</View>
-			{!item.isDefault && (
-				<TouchableOpacity
-					style={[styles.deleteButton, { backgroundColor: colors.destructive }]}
-					onPress={() => handleDeleteRole(item.id)}
-				>
-					<Text style={styles.deleteButtonText}>{Resources.ServerManagement.Delete}</Text>
-				</TouchableOpacity>
-			)}
-		</TouchableOpacity>
-	);
-
-	const renderMemberItem = ({ item }: { item: ServerMember }) => (
-		<View style={[styles.memberItem, { backgroundColor: colors.card, borderColor: colors.border }]}>
-			<View style={styles.memberInfo}>
-				<Text style={[styles.memberName, { color: colors.text }]}>{item.memberName}</Text>
-				<Text style={[styles.memberUsername, { color: colors.tabIconDefault }]}>@{item.user.username}</Text>
-			</View>
-			<View style={styles.memberRoles}>
-				{item.roles.map((role) => (
-					<View
-						key={role.id}
-						style={[styles.memberRoleTag, { backgroundColor: role.color + '20', borderColor: role.color }]}
-					>
-						<Text style={[styles.memberRoleText, { color: role.color }]}>{role.name}</Text>
-					</View>
-				))}
-			</View>
-			<TouchableOpacity
-				style={[
-					styles.manageRolesButton, 
-					{ 
-						borderColor: colors.tint,
-						opacity: openingMemberManager === item.id ? 0.6 : 1
-					}
-				]}
-				onPress={() => openMemberRoleManager(item)}
-				disabled={openingMemberManager === item.id}
-			>
-				{openingMemberManager === item.id ? (
-					<ActivityIndicator size="small" color={colors.tint} />
-				) : (
-					<Text style={[styles.manageRolesButtonText, { color: colors.tint }]}>
-						{Resources.ServerManagement.Manage_Roles_Button}
-					</Text>
-				)}
-			</TouchableOpacity>
-		</View>
-	);
 
 	return (
 		<View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -374,46 +295,20 @@ export default function RolesManagement({
 			) : (
 				<View style={styles.content}>
 					{selectedTab === 'roles' ? (
-						<View style={styles.tabContent}>
-							<View style={styles.sectionHeader}>
-								<Text style={[styles.sectionTitle, { color: colors.text }]}>
-									Server Roles ({roles.length})
-								</Text>
-								<TouchableOpacity
-									style={[styles.createButton, { backgroundColor: colors.tint }]}
-									onPress={() => setShowCreateRoleModal(true)}
-								>
-									<Text style={[
-										styles.createButtonText, 
-										{ color: colorScheme === 'dark' ? '#000000' : '#FFFFFF' }
-									]}>
-										{Resources.ServerManagement.Create_Role}
-									</Text>
-								</TouchableOpacity>
-							</View>
-							<FlatList
-								data={roles}
-								renderItem={renderRoleItem}
-								keyExtractor={(item) => item.id}
-								showsVerticalScrollIndicator={false}
-								contentContainerStyle={styles.listContainer}
-							/>
-						</View>
+						<ServerRolesTab
+							roles={roles}
+							onCreateRole={() => setShowCreateRoleModal(true)}
+							onRoleSelect={setSelectedRole}
+							onDeleteRole={handleDeleteRole}
+						/>
 					) : (
-						<View style={styles.tabContent}>
-							<View style={styles.sectionHeader}>
-								<Text style={[styles.sectionTitle, { color: colors.text }]}>
-									Server Members ({members.length})
-								</Text>
-							</View>
-							<FlatList
-								data={members}
-								renderItem={renderMemberItem}
-								keyExtractor={(item) => item.id}
-								showsVerticalScrollIndicator={false}
-								contentContainerStyle={styles.listContainer}
-							/>
-						</View>
+						<ServerMembersTab
+							members={members}
+							onMemberSelect={(member) => {
+								setSelectedMember(member);
+								setShowMemberRoleModal(true);
+							}}
+						/>
 					)}
 				</View>
 			)}
@@ -437,161 +332,19 @@ export default function RolesManagement({
 			)}
 
 			{/* Member Role Management Modal */}
-			{selectedMember && (
-				<Modal
-					visible={showMemberRoleModal}
-					animationType="slide"
-					presentationStyle="pageSheet"
-					onRequestClose={() => {
-						if (assigningRoles.size === 0 && removingRoles.size === 0) {
-							setShowMemberRoleModal(false);
-							setSelectedMember(null);
-						}
-					}}
-				>
-					<View style={[styles.container, { backgroundColor: colors.background }]}>
-						<View style={[styles.header, { borderBottomColor: colors.border }]}>
-							<Text style={[styles.title, { color: colors.text }]}>
-								{Resources.ServerManagement.Manage_Member_Roles} - {selectedMember.memberName}
-							</Text>
-							<View style={{ flexDirection: 'row', alignItems: 'center' }}>
-								{(assigningRoles.size > 0 || removingRoles.size > 0) && (
-									<ActivityIndicator 
-										size="small" 
-										color={colors.tint} 
-										style={{ marginRight: 12 }}
-									/>
-								)}
-								<TouchableOpacity
-									onPress={() => {
-										setShowMemberRoleModal(false);
-										setSelectedMember(null);
-									}}
-									style={[
-										styles.closeButton,
-										{ opacity: (assigningRoles.size > 0 || removingRoles.size > 0) ? 0.5 : 1 }
-									]}
-									disabled={assigningRoles.size > 0 || removingRoles.size > 0}
-								>
-									<Text style={[styles.closeButtonText, { color: colors.text }]}>×</Text>
-								</TouchableOpacity>
-							</View>
-						</View>
-
-						<ScrollView style={styles.content}>
-							<View style={styles.sectionHeader}>
-								<Text style={[styles.sectionTitle, { color: colors.text }]}>
-									{Resources.ServerManagement.Current_Roles}
-								</Text>
-							</View>
-							
-							{selectedMember.roles && selectedMember.roles.length > 0 ? (
-								<View style={styles.listContainer}>
-									{selectedMember.roles.map((role) => (
-										<View key={role.id} style={[
-											styles.roleItem,
-											{ 
-												backgroundColor: colors.card,
-												borderColor: colors.border
-											}
-										]}>
-											<View style={styles.roleHeader}>
-												<View style={[styles.roleColorIndicator, { backgroundColor: role.color || '#888888' }]} />
-												<Text style={[styles.roleName, { color: colors.text }]}>
-													{role.name}
-												</Text>
-											</View>
-											<TouchableOpacity
-												onPress={() => handleRemoveRole(selectedMember.id, role.id)}
-												style={[
-													styles.deleteButton, 
-													{ 
-														backgroundColor: '#ff4444',
-														opacity: removingRoles.has(`${selectedMember.id}-${role.id}`) ? 0.6 : 1
-													}
-												]}
-												disabled={removingRoles.has(`${selectedMember.id}-${role.id}`)}
-											>
-												{removingRoles.has(`${selectedMember.id}-${role.id}`) ? (
-													<ActivityIndicator size="small" color="white" />
-												) : (
-													<Text style={styles.deleteButtonText}>
-														{Resources.ServerManagement.Remove}
-													</Text>
-												)}
-											</TouchableOpacity>
-										</View>
-									))}
-								</View>
-							) : (
-								<Text style={[styles.placeholder, { color: colors.text }]}>
-									{Resources.ServerManagement.No_Roles_Assigned}
-								</Text>
-							)}
-
-							<View style={[styles.sectionHeader, { marginTop: 24 }]}>
-								<Text style={[styles.sectionTitle, { color: colors.text }]}>
-									{Resources.ServerManagement.Available_Roles}
-								</Text>
-							</View>
-							
-							{roles.filter(role => 
-								!selectedMember.roles?.some(memberRole => memberRole.id === role.id)
-							).length > 0 ? (
-								<View style={styles.listContainer}>
-									{roles
-										.filter(role => !selectedMember.roles?.some(memberRole => memberRole.id === role.id))
-										.map((role) => (
-										<View key={role.id} style={[
-											styles.roleItem,
-											{ 
-												backgroundColor: colors.card,
-												borderColor: colors.border
-											}
-										]}>
-											<View style={styles.roleHeader}>
-												<View style={[styles.roleColorIndicator, { backgroundColor: role.color || '#888888' }]} />
-												<Text style={[styles.roleName, { color: colors.text }]}>
-													{role.name}
-												</Text>
-											</View>
-											<TouchableOpacity
-												onPress={() => handleAssignRole(selectedMember.id, role.id)}
-												style={[
-													styles.createButton, 
-													{ 
-														backgroundColor: colors.tint,
-														opacity: assigningRoles.has(`${selectedMember.id}-${role.id}`) ? 0.6 : 1
-													}
-												]}
-												disabled={assigningRoles.has(`${selectedMember.id}-${role.id}`)}
-											>
-												{assigningRoles.has(`${selectedMember.id}-${role.id}`) ? (
-													<ActivityIndicator 
-														size="small" 
-														color={colorScheme === 'dark' ? '#000000' : '#FFFFFF'} 
-													/>
-												) : (
-													<Text style={[
-														styles.createButtonText,
-														{ color: colorScheme === 'dark' ? '#000000' : '#FFFFFF' }
-													]}>
-														{Resources.ServerManagement.Assign}
-													</Text>
-												)}
-											</TouchableOpacity>
-										</View>
-									))}
-								</View>
-							) : (
-								<Text style={[styles.placeholder, { color: colors.text }]}>
-									{Resources.ServerManagement.No_Available_Roles}
-								</Text>
-							)}
-						</ScrollView>
-					</View>
-				</Modal>
-			)}
+			<MemberRoleModal
+				visible={showMemberRoleModal}
+				member={selectedMember}
+				roles={roles}
+				assigningRoles={assigningRoles}
+				removingRoles={removingRoles}
+				onClose={() => {
+					setShowMemberRoleModal(false);
+					setSelectedMember(null);
+				}}
+				onAssignRole={handleAssignRole}
+				onRemoveRole={handleRemoveRole}
+			/>
 		</View>
 	);
 }
@@ -604,7 +357,8 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		justifyContent: 'space-between',
 		alignItems: 'center',
-		padding: 16,
+		paddingHorizontal: 20,
+		paddingVertical: 16,
 		borderBottomWidth: 1,
 	},
 	title: {
@@ -621,16 +375,18 @@ const styles = StyleSheet.create({
 	},
 	tabContainer: {
 		flexDirection: 'row',
-		padding: 4,
-		margin: 8,
-		borderRadius: 8,
+		padding: 6,
+		marginHorizontal: 16,
+		marginVertical: 12,
+		borderRadius: 10,
 	},
 	tab: {
 		flex: 1,
-		paddingVertical: 8,
-		paddingHorizontal: 16,
-		borderRadius: 6,
+		paddingVertical: 12,
+		paddingHorizontal: 20,
+		borderRadius: 8,
 		alignItems: 'center',
+		marginHorizontal: 2,
 	},
 	tabText: {
 		fontSize: 14,
@@ -638,7 +394,9 @@ const styles = StyleSheet.create({
 	},
 	content: {
 		flex: 1,
-		padding: 16,
+		paddingHorizontal: 16,
+		paddingTop: 8,
+		paddingBottom: 16,
 	},
 	loadingContainer: {
 		flex: 1,
@@ -651,70 +409,6 @@ const styles = StyleSheet.create({
 	},
 	tabContent: {
 		flex: 1,
-	},
-	sectionHeader: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		marginBottom: 12,
-	},
-	sectionTitle: {
-		fontSize: 16,
-		fontWeight: '600',
-	},
-	createButton: {
-		paddingHorizontal: 16,
-		paddingVertical: 8,
-		borderRadius: 6,
-	},
-	createButtonText: {
-		color: 'white',
-		fontSize: 14,
-		fontWeight: '500',
-	},
-	listContainer: {
-		gap: 8,
-	},
-	roleItem: {
-		flexDirection: 'row',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		padding: 12,
-		borderRadius: 8,
-		borderWidth: 1,
-	},
-	disabledRoleItem: {
-		opacity: 0.6,
-	},
-	roleHeader: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		flex: 1,
-	},
-	roleColorIndicator: {
-		width: 12,
-		height: 12,
-		borderRadius: 6,
-		marginRight: 8,
-	},
-	roleName: {
-		fontSize: 14,
-		fontWeight: '500',
-	},
-	defaultBadge: {
-		fontSize: 12,
-		fontStyle: 'italic',
-		marginLeft: 8,
-	},
-	deleteButton: {
-		paddingHorizontal: 12,
-		paddingVertical: 6,
-		borderRadius: 4,
-	},
-	deleteButtonText: {
-		color: 'white',
-		fontSize: 12,
-		fontWeight: '500',
 	},
 	memberItem: {
 		flexDirection: 'row',
@@ -749,10 +443,6 @@ const styles = StyleSheet.create({
 	memberRoleText: {
 		fontSize: 10,
 		fontWeight: '500',
-	},
-	placeholder: {
-		fontSize: 14,
-		lineHeight: 20,
 	},
 	manageRolesButton: {
 		paddingHorizontal: 8,
