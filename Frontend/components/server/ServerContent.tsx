@@ -78,6 +78,13 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 		checkUserPermissions();
 	}, [fetchServerChannels, checkUserPermissions]);
 
+	// Reset state when serverId changes
+	useEffect(() => {
+		setSelectedChannel(null);
+		setShowRolesManagement(false);
+		setError(null);
+	}, [serverId]);
+
 	const handleChannelPress = (channel: Channel) => {
 		console.log('Selected channel:', channel);
 		setSelectedChannel(channel);

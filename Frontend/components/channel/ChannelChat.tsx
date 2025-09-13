@@ -236,6 +236,13 @@ export default function ChannelChat({ channel, serverId }: ChannelChatProps) {
 		};
 	}, [channel.id, serverId, fetchMessages]);
 
+	// Reset state when channel changes for immediate UI feedback
+	useEffect(() => {
+		setMessages([]);
+		setHasMore(true);
+		setLoading(true);
+	}, [channel.id, serverId]);
+
 	const renderMessage = ({ item }: { item: Message }) => {
 		return (
 			<MessageItem
