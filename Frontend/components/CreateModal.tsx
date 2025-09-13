@@ -17,16 +17,9 @@ import { Button } from '@/components/ui';
 import { getStrings } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
+import { CreateModalProps } from '@/types/ui';
 
 export type CreateType = 'server' | 'direct-channel';
-
-interface CreateModalProps {
-	visible: boolean;
-	onClose: () => void;
-	defaultType?: CreateType;
-	onCreateServer?: (data: { name: string; logo?: string }) => void;
-	onCreateDirectChannel?: (data: { channelName: string; userId: string }) => void;
-}
 
 export default function CreateModal({
 	visible,

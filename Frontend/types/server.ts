@@ -50,3 +50,33 @@ export interface ServerActionButtonsProps {
 	onCreateChannel?: (channelData: { name: string; type: 'text' | 'voice' }) => void;
 	onManageRoles?: () => void;
 }
+
+export interface ChannelSectionProps {
+	title: string;
+	channels: Channel[];
+	canManageServer: boolean;
+	onChannelPress: (channel: Channel) => void;
+	onAddChannel: () => void;
+}
+
+export interface ChannelSidebarProps {
+	serverId: string;
+	serverName?: string;
+	channels: Channel[];
+	loading: boolean;
+	error: string | null;
+	canManageServer: boolean;
+	canManageRoles: boolean;
+	canCreateInvite: boolean;
+	onChannelPress: (channel: Channel) => void;
+	onAddChannel: () => void;
+	onManageRoles: () => void;
+	onRetry: () => void;
+}
+
+export interface MainServerSidebarProps {
+	onServerSelect?: (server: import('@/types/sidebar').Server) => void;
+	onDirectChannelSelect?: (channel: import('@/types/sidebar').DirectChannel) => void;
+	onAddServer?: () => void;
+	onCreateDirectMessage?: () => void;
+}

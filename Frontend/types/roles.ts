@@ -1,3 +1,5 @@
+import { Permission } from '@/utils/permissions';
+
 export interface Role {
 	id: string;
 	name: string;
@@ -48,16 +50,15 @@ export interface RolesManagementProps {
 }
 
 export interface RoleDetailsModalProps {
-	visible: boolean;
-	role: Role | null;
+	role: Role;
 	serverId: string;
+	permissionCategories: { [key: string]: Permission[] };
 	onClose: () => void;
-	onSave: (roleData: any) => void;
-	colors: any;
+	onRoleUpdated: () => Promise<void>;
 }
 
 export interface PermissionItemProps {
-	permission: import('@/utils/permissions').Permission;
+	permission: Permission;
 	value: boolean;
 	onValueChange: () => void;
 	disabled?: boolean;
@@ -78,4 +79,26 @@ export interface CreateRoleModalProps {
 	visible: boolean;
 	onClose: () => void;
 	onCreateRole: (name: string, color: string) => Promise<void>;
+}
+
+export interface ChannelPermissions {
+	[channelId: string]: { [permission: string]: boolean };
+}
+
+export interface RoleData {
+	id: string;
+	name: string;
+	color: string;
+	isDefault: boolean;
+	serverId: string;
+	rolePermissions: string[]; // Server-wide permissions
+	channelPermissions: {
+		channelId: string;
+		permissions: string[];
+	}[];
+	currentHolders: {
+		id: string;
+		userId: string;
+		memberName: string;
+	}[];
 }

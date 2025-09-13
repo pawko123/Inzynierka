@@ -15,15 +15,9 @@ import { getStrings } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
 import { translateError } from '@/utils/errorTranslator';
+import { CreateChannelModalProps } from '@/types/ui';
 
 export type ChannelType = 'text' | 'voice';
-
-interface CreateChannelModalProps {
-	visible: boolean;
-	onClose: () => void;
-	serverId: string;
-	onChannelCreated?: (channel: any) => void;
-}
 
 export default function CreateChannelModal({ visible, onClose, serverId, onChannelCreated }: CreateChannelModalProps) {
 	const colorScheme = useColorScheme();

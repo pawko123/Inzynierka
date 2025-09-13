@@ -11,22 +11,7 @@ import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
 import ChannelSection from './ChannelSection';
 import ServerActionButtons from '../server/ServerActionButtons';
-import { Channel } from '@/types/server';
-
-interface ChannelSidebarProps {
-	serverId: string;
-	serverName?: string;
-	channels: Channel[];
-	loading: boolean;
-	error: string | null;
-	canManageServer: boolean;
-	canManageRoles: boolean;
-	canCreateInvite: boolean;
-	onChannelPress: (channel: Channel) => void;
-	onAddChannel: () => void;
-	onManageRoles: () => void;
-	onRetry: () => void;
-}
+import { ChannelSidebarProps } from '@/types/server';
 
 export default function ChannelSidebar({
 	serverId,

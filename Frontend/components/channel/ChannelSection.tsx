@@ -9,15 +9,7 @@ import {
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
-import { Channel } from '@/types/server';
-
-interface ChannelSectionProps {
-	title: string;
-	channels: Channel[];
-	canManageServer: boolean;
-	onChannelPress: (channel: Channel) => void;
-	onAddChannel: () => void;
-}
+import { Channel, ChannelSectionProps } from '@/types/server';
 
 export default function ChannelSection({
 	title,

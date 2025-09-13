@@ -16,41 +16,7 @@ import { api } from '@/services/api';
 import { translateError } from '@/utils/errorTranslator';
 import { Permission, getChannelSpecificTextPermissions, getChannelSpecificVoicePermissions } from '@/utils/permissions';
 import PermissionItem from './PermissionItem';
-import { Role, Channel } from '@/types';
-
-interface RolePermissions {
-	[key: string]: boolean;
-}
-
-interface ChannelPermissions {
-	[channelId: string]: { [permission: string]: boolean };
-}
-
-interface RoleData {
-	id: string;
-	name: string;
-	color: string;
-	isDefault: boolean;
-	serverId: string;
-	rolePermissions: string[]; // Server-wide permissions
-	channelPermissions: {
-		channelId: string;
-		permissions: string[];
-	}[];
-	currentHolders: {
-		id: string;
-		userId: string;
-		memberName: string;
-	}[];
-}
-
-interface RoleDetailsModalProps {
-	role: Role;
-	serverId: string;
-	permissionCategories: { [key: string]: Permission[] };
-	onClose: () => void;
-	onRoleUpdated: () => Promise<void>;
-}
+import { Channel, RoleDetailsModalProps, RolePermissions, ChannelPermissions, RoleData } from '@/types';
 
 export default function RoleDetailsModal({
 	role,

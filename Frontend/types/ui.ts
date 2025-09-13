@@ -50,3 +50,18 @@ export interface ServerManagementProps {
 	onCreateInvite?: () => void;
 	onServerSettings?: () => void;
 }
+
+export interface CreateModalProps {
+	visible: boolean;
+	onClose: () => void;
+	defaultType?: 'server' | 'direct-channel';
+	onCreateServer?: (data: { name: string; logo?: string }) => void;
+	onCreateDirectChannel?: (data: { channelName: string; userId: string }) => void;
+}
+
+export interface CreateChannelModalProps {
+	visible: boolean;
+	onClose: () => void;
+	serverId: string;
+	onChannelCreated?: (channel: any) => void;
+}

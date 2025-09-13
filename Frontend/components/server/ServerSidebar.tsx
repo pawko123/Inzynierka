@@ -16,20 +16,14 @@ import DirectChannelItem from '@/components/ui/DirectChannelItem';
 import { SidebarActionButtons } from '@/components/ui';
 import type { Server, DirectChannel } from '@/types/sidebar';
 import { getStrings } from '@/i18n';
-
-interface ServerSidebarProps {
-	onServerSelect?: (server: Server) => void;
-	onDirectChannelSelect?: (channel: DirectChannel) => void;
-	onAddServer?: () => void;
-	onCreateDirectMessage?: () => void;
-}
+import { MainServerSidebarProps } from '@/types/server';
 
 export default function ServerSidebar({ 
 	onServerSelect, 
 	onDirectChannelSelect,
 	onAddServer,
 	onCreateDirectMessage 
-}: ServerSidebarProps) {
+}: MainServerSidebarProps) {
 	const colorScheme = useColorScheme();
 	const { currentUser, signOut } = useAuth();
 	const [servers, setServers] = useState<Server[]>([]);
