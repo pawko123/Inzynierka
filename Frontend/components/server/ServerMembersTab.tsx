@@ -9,28 +9,7 @@ import {
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
-
-interface Role {
-	id: string;
-	name: string;
-	color: string;
-	isDefault: boolean;
-}
-
-interface ServerMember {
-	id: string;
-	memberName: string;
-	user: {
-		id: string;
-		username: string;
-	};
-	roles: Role[];
-}
-
-interface ServerMembersTabProps {
-	members: ServerMember[];
-	onMemberSelect: (member: ServerMember) => void;
-}
+import { ServerMember, ServerMembersTabProps } from '@/types/roles';
 
 export default function ServerMembersTab({ 
 	members, 
@@ -44,7 +23,7 @@ export default function ServerMembersTab({
 		<View style={[styles.memberItem, { backgroundColor: colors.card, borderColor: colors.border }]}>
 			<View style={styles.memberInfo}>
 				<Text style={[styles.memberName, { color: colors.text }]}>{item.memberName}</Text>
-				<Text style={[styles.memberUsername, { color: colors.tabIconDefault }]}>@{item.user.username}</Text>
+				<Text style={[styles.memberUsername, { color: colors.tabIconDefault }]}>@{item.user?.username || item.username}</Text>
 			</View>
 			<View style={styles.memberRoles}>
 				{item.roles.map((role) => (

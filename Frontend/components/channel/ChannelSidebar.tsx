@@ -11,13 +11,7 @@ import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
 import ChannelSection from './ChannelSection';
 import ServerActionButtons from '../server/ServerActionButtons';
-
-interface Channel {
-	id: string;
-	name: string;
-	type: string;
-	createdAt: string;
-}
+import { Channel } from '@/types/server';
 
 interface ChannelSidebarProps {
 	serverId: string;

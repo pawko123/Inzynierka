@@ -11,12 +11,7 @@ import {
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
-
-interface CreateRoleModalProps {
-	visible: boolean;
-	onClose: () => void;
-	onCreateRole: (name: string, color: string) => Promise<void>;
-}
+import { CreateRoleModalProps } from '@/types/roles';
 
 const predefinedColors = [
 	'#FF5733', '#33FF57', '#3357FF', '#FF33F1', '#F1FF33',

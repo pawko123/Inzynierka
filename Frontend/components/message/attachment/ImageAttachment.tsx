@@ -10,21 +10,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import FileAttachment from './FileAttachment';
 import { FileService } from '@/services/FileService';
-
-interface MessageAttachmentData {
-	id: string;
-	fileName: string;
-	url: string;
-	fileType: string;
-	size: number;
-}
-
-interface ImageAttachmentProps {
-	attachment: MessageAttachmentData;
-	serverId: string;
-	channelId: string;
-	colors: any;
-}
+import { ImageAttachmentProps } from '@/types/message';
 
 const { width: screenWidth } = Dimensions.get('window');
 

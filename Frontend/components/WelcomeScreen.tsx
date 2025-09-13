@@ -4,12 +4,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
 import { Button } from '@/components/ui';
-
-interface WelcomeScreenProps {
-	onCreateServer: () => void;
-	onCreateDirectChannel: () => void;
-	onJoinServer: () => void;
-}
+import { WelcomeScreenProps } from '@/types/ui';
 
 export default function WelcomeScreen({ 
 	onCreateServer, 

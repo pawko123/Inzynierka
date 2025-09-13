@@ -9,20 +9,7 @@ import {
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
-
-interface Role {
-	id: string;
-	name: string;
-	color: string;
-	isDefault: boolean;
-}
-
-interface ServerRolesTabProps {
-	roles: Role[];
-	onCreateRole: () => void;
-	onRoleSelect: (role: Role) => void;
-	onDeleteRole: (roleId: string) => void;
-}
+import { Role, ServerRolesTabProps } from '@/types/roles';
 
 export default function ServerRolesTab({ 
 	roles, 

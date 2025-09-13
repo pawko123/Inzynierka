@@ -13,13 +13,7 @@ import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
 import { api } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
-
-interface ServerActionButtonsProps {
-	serverId: string;
-	canManageRoles: boolean;
-	canCreateInvite: boolean;
-	onManageRoles?: () => void;
-}
+import { ServerActionButtonsProps } from '@/types/server';
 
 export default function ServerActionButtons({
 	serverId,

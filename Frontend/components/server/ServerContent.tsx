@@ -15,19 +15,7 @@ import ChannelSidebar from '../channel/ChannelSidebar';
 import { translateError } from '@/utils/errorTranslator';
 import RolesManagement from '../rolemanagement/RolesManagement';
 import ChannelChat from '../channel/ChannelChat';
-
-interface Channel {
-	id: string;
-	name: string;
-	type: string;
-	createdAt: string;
-}
-
-interface ServerContentProps {
-	serverId: string;
-	serverName?: string;
-	onChannelSelect?: (channelId: string) => void;
-}
+import { Channel, ServerContentProps } from '@/types/server';
 
 export default function ServerContent({ serverId, serverName, onChannelSelect }: ServerContentProps) {
 	const colorScheme = useColorScheme();

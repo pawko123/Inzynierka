@@ -2,13 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import type { DirectChannel } from '@/types/sidebar';
-
-interface DirectChannelItemProps {
-	channel: DirectChannel;
-	isSelected: boolean;
-	onPress: (channelId: string) => void;
-}
+import { DirectChannelItemProps } from '@/types';
 
 export default function DirectChannelItem({ channel, isSelected, onPress }: DirectChannelItemProps) {
 	const colorScheme = useColorScheme();

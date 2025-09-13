@@ -17,43 +17,10 @@ import { translateError } from '@/utils/errorTranslator';
 import { webSocketService } from '@/services/WebSocketService';
 import { getStrings } from '@/i18n';
 import type { MessageData, MessageDeletedData, MessageUpdatedData } from '@/services/WebSocketService';
+import { ChannelChatProps } from '@/types/server';
+import { Message } from '@/types/message';
 import MessageItem from '../message/MessageItem';
 import MessageInput from '../message/MessageInput';
-
-interface Channel {
-	id: string;
-	name: string;
-	type: string;
-	createdAt: string;
-}
-
-interface MessageAttachment {
-	id: string;
-	fileName: string;
-	url: string;
-	fileType: string;
-	size: number;
-}
-
-interface MessageSender {
-	id?: string;
-	userId: string;
-	memberName: string;
-}
-
-interface Message {
-	messageId: string;
-	content: string | null;
-	channelId: string;
-	sender: MessageSender;
-	attachments: MessageAttachment[];
-	createdAt: Date;
-}
-
-interface ChannelChatProps {
-	channel: Channel;
-	serverId: string;
-}
 
 export default function ChannelChat({ channel, serverId }: ChannelChatProps) {
 	const colorScheme = useColorScheme();

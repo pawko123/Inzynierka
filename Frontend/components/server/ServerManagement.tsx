@@ -8,15 +8,7 @@ import {
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
-
-interface ServerManagementProps {
-	serverId: string;
-	serverName: string;
-	canManageServer: boolean;
-	onManageRoles?: () => void;
-	onCreateInvite?: () => void;
-	onServerSettings?: () => void;
-}
+import { ServerManagementProps } from '@/types/ui';
 
 export default function ServerManagement({
 	serverId,

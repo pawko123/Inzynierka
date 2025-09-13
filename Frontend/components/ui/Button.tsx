@@ -2,22 +2,10 @@ import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
+import { ButtonProps } from '@/types/ui';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'circular';
 export type ButtonSize = 'small' | 'medium' | 'large';
-
-interface ButtonProps {
-	title?: string;
-	onPress: () => void;
-	variant?: ButtonVariant;
-	size?: ButtonSize;
-	disabled?: boolean;
-	style?: ViewStyle;
-	textStyle?: TextStyle;
-	activeOpacity?: number;
-	icon?: React.ReactNode;
-	isCircular?: boolean;
-}
 
 export default function Button({
 	title,

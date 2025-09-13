@@ -11,34 +11,7 @@ import {
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
-
-interface Role {
-	id: string;
-	name: string;
-	color: string;
-	isDefault: boolean;
-}
-
-interface ServerMember {
-	id: string;
-	memberName: string;
-	user: {
-		id: string;
-		username: string;
-	};
-	roles: Role[];
-}
-
-interface MemberRoleModalProps {
-	visible: boolean;
-	member: ServerMember | null;
-	roles: Role[];
-	assigningRoles: Set<string>;
-	removingRoles: Set<string>;
-	onClose: () => void;
-	onAssignRole: (memberId: string, roleId: string) => void;
-	onRemoveRole: (memberId: string, roleId: string) => void;
-}
+import { MemberRoleModalProps } from '@/types/roles';
 
 export default function MemberRoleModal({
 	visible,

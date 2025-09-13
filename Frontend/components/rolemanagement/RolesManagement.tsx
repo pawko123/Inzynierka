@@ -18,29 +18,7 @@ import MemberRoleModal from './MemberRoleModal';
 import ServerRolesTab from '../server/ServerRolesTab';
 import ServerMembersTab from '../server/ServerMembersTab';
 import { createPermissionCategories } from '@/utils/permissions';
-
-interface Role {
-	id: string;
-	name: string;
-	color: string;
-	isDefault: boolean;
-}
-
-interface ServerMember {
-	id: string;
-	memberName: string;
-	user: {
-		id: string;
-		username: string;
-	};
-	roles: Role[];
-}
-
-interface RolesManagementProps {
-	serverId: string;
-	serverName: string;
-	onClose?: () => void;
-}
+import { Role, ServerMember, RolesManagementProps } from '@/types/roles';
 
 export default function RolesManagement({
 	serverId,
@@ -304,6 +282,14 @@ export default function RolesManagement({
 					) : (
 						<ServerMembersTab
 							members={members}
+							roles={roles}
+							onManageMemberRoles={(memberId) => {
+								const member = members.find(m => m.id === memberId);
+								if (member) {
+									setSelectedMember(member);
+									setShowMemberRoleModal(true);
+								}
+							}}
 							onMemberSelect={(member) => {
 								setSelectedMember(member);
 								setShowMemberRoleModal(true);

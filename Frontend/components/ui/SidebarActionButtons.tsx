@@ -3,11 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import Button from './Button';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-
-interface SidebarActionsProps {
-	onAddServer?: () => void;
-	onCreateDirectMessage?: () => void;
-}
+import { SidebarActionsProps } from '@/types';
 
 export default function SidebarActionButtons({ onAddServer, onCreateDirectMessage }: SidebarActionsProps) {
 	const colorScheme = useColorScheme();

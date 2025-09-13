@@ -8,21 +8,7 @@ import {
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { FileService } from '@/services/FileService';
-
-interface MessageAttachmentData {
-	id: string;
-	fileName: string;
-	url: string;
-	fileType: string;
-	size: number;
-}
-
-interface FileAttachmentProps {
-	attachment: MessageAttachmentData;
-	serverId: string;
-	channelId: string;
-	colors: any;
-}
+import { FileAttachmentProps } from '@/types/message';
 
 const { width: screenWidth } = Dimensions.get('window');
 

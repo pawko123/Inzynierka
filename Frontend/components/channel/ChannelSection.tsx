@@ -9,13 +9,7 @@ import {
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
-
-interface Channel {
-	id: string;
-	name: string;
-	type: string;
-	createdAt: string;
-}
+import { Channel } from '@/types/server';
 
 interface ChannelSectionProps {
 	title: string;

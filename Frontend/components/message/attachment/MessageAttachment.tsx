@@ -1,22 +1,8 @@
 import React from 'react';
+import { MessageAttachmentProps } from '@/types/message';
 import ImageAttachment from './ImageAttachment';
 import VideoAttachment from './VideoAttachment';
 import FileAttachment from './FileAttachment';
-
-interface MessageAttachmentData {
-	id: string;
-	fileName: string;
-	url: string;
-	fileType: string;
-	size: number;
-}
-
-interface MessageAttachmentProps {
-	attachment: MessageAttachmentData;
-	serverId: string;
-	channelId: string;
-	colors: any;
-}
 
 export default function MessageAttachment({ 
 	attachment, 

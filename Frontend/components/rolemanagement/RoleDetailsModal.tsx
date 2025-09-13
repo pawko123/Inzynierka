@@ -16,13 +16,7 @@ import { api } from '@/services/api';
 import { translateError } from '@/utils/errorTranslator';
 import { Permission, getChannelSpecificTextPermissions, getChannelSpecificVoicePermissions } from '@/utils/permissions';
 import PermissionItem from './PermissionItem';
-
-interface Role {
-	id: string;
-	name: string;
-	color: string;
-	isDefault: boolean;
-}
+import { Role, Channel } from '@/types';
 
 interface RolePermissions {
 	[key: string]: boolean;
@@ -30,12 +24,6 @@ interface RolePermissions {
 
 interface ChannelPermissions {
 	[channelId: string]: { [permission: string]: boolean };
-}
-
-interface Channel {
-	id: string;
-	name: string;
-	type: string;
 }
 
 interface RoleData {

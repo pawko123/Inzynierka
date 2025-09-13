@@ -1,15 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { Colors } from '@/constants/Colors';
-import type { Server } from '@/types/sidebar';
+import { Colors } from '@/constants/Colors'
 import { getStrings } from '@/i18n';
-
-interface ServerItemProps {
-	server: Server;
-	isSelected: boolean;
-	onPress: (server: Server) => void;
-}
+import { ServerItemProps } from '@/types';
 
 export default function ServerItem({ server, isSelected, onPress }: ServerItemProps) {
 	const colorScheme = useColorScheme();

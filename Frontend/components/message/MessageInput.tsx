@@ -13,14 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { webSocketService } from '@/services/WebSocketService';
 import { useAuth } from '@/contexts/AuthContext';
 import { getStrings } from '@/i18n';
-
-interface MessageInputProps {
-	onSendMessage: (content: string, attachments: any[]) => void;
-	disabled: boolean;
-	colors: any;
-	placeholder: string;
-	channelId: string;
-}
+import { MessageInputProps } from '@/types/message';
 
 export default function MessageInput({
 	onSendMessage,

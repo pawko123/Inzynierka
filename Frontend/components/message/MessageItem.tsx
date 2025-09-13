@@ -5,36 +5,8 @@ import {
 	StyleSheet,
 } from 'react-native';
 import { getStrings } from '@/i18n';
+import { MessageItemProps } from '@/types/message';
 import MessageAttachment from './attachment/MessageAttachment';
-
-interface MessageAttachmentData {
-	id: string;
-	fileName: string;
-	url: string;
-	fileType: string;
-	size: number;
-}
-
-interface MessageSender {
-	id?: string;
-	userId: string;
-	memberName: string;
-}
-
-interface Message {
-	messageId: string;
-	content: string | null;
-	channelId: string;
-	sender?: MessageSender; // Make sender optional to handle undefined cases
-	attachments: MessageAttachmentData[];
-	createdAt: Date;
-}
-
-interface MessageItemProps {
-	message: Message;
-	serverId: string;
-	colors: any;
-}
 
 export default function MessageItem({ message, serverId, colors }: MessageItemProps) {
 	const Resources = getStrings();

@@ -14,12 +14,7 @@ import { Button } from '@/components/ui';
 import { getStrings } from '@/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
-
-interface JoinServerModalProps {
-	visible: boolean;
-	onClose: () => void;
-	onJoinServer?: (server: any) => void;
-}
+import { JoinServerModalProps } from '@/types/ui';
 
 export default function JoinServerModal({ visible, onClose, onJoinServer }: JoinServerModalProps) {
 	const colorScheme = useColorScheme();
