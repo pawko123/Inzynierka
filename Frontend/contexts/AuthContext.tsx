@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { storage } from '@/utils/storage';
 import { api, setAuthToken } from '@/services/api';
+import { webSocketService } from '@/services/WebSocketService';
 import type { AuthContextType, SignInParams, SignUpParams, CurrentUser } from '@/types/auth';
 
 const TOKEN_KEY = process.env.EXPO_PUBLIC_TOKEN_KEY || 'auth_token';
@@ -38,8 +39,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 	useEffect(() => {
 		if (token) {
 			refreshCurrentUser();
+			// Initialize WebSocket connection when user is authenticated
+			webSocketService.initialize(token);
 		} else {
 			setCurrentUser(null);
+			// Disconnect WebSocket when user logs out
+			webSocketService.disconnect();
 		}
 	}, [token, refreshCurrentUser]);
 

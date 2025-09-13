@@ -265,5 +265,20 @@
 			"Name": "Ogłuszaj członków",
 			"Description": "Pozwala użytkownikom ogłuszać innych członków na tym kanale"
 		}
+	},
+	"Chat": {
+		"Loading_Messages": "Ładowanie wiadomości...",
+		"Load_More_Messages": "Załaduj więcej wiadomości",
+		"Loading_More_Messages": "Ładowanie kolejnych wiadomości...",
+		"Loading": "Ładowanie...",
+		"No_Messages": "Jeszcze brak wiadomości. Rozpocznij rozmowę!",
+		"Failed_To_Load": "Nie udało się załadować wiadomości",
+		"Failed_To_Send": "Nie udało się wysłać wiadomości",
+		"Error": "Błąd",
+		"File_Attachment": "Załącznik pliku",
+		"File_Feature_Coming_Soon": "Funkcja załączników zostanie wkrótce zaimplementowana na urządzeniach mobilnych",
+		"OK": "OK",
+		"Message_Placeholder": "Wiadomość",
+		"Unknown_User": "Nieznany użytkownik"
 	}
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
 	View,
 	Text,
@@ -9,12 +9,17 @@ import {
 	Alert,
 	Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { webSocketService } from '@/services/WebSocketService';
+import { useAuth } from '@/contexts/AuthContext';
+import { getStrings } from '@/i18n';
 
 interface MessageInputProps {
 	onSendMessage: (content: string, attachments: any[]) => void;
 	disabled: boolean;
 	colors: any;
 	placeholder: string;
+	channelId: string;
 }
 
 export default function MessageInput({
@@ -22,12 +27,61 @@ export default function MessageInput({
 	disabled,
 	colors,
 	placeholder,
+	channelId,
 }: MessageInputProps) {
 	const [message, setMessage] = useState('');
 	const [attachments, setAttachments] = useState<any[]>([]);
+	const { currentUser } = useAuth();
+	
+	// Typing indicator management
+	const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const isTypingRef = useRef(false);
+	
+	const handleTypingStart = useCallback(() => {
+		if (!isTypingRef.current && currentUser) {
+			isTypingRef.current = true;
+			webSocketService.startTyping(channelId, currentUser.username);
+		}
+		
+		// Clear existing timeout
+		if (typingTimeoutRef.current) {
+			clearTimeout(typingTimeoutRef.current);
+		}
+		
+		// Set new timeout to stop typing after 3 seconds of inactivity
+		typingTimeoutRef.current = setTimeout(() => {
+			if (isTypingRef.current) {
+				isTypingRef.current = false;
+				webSocketService.stopTyping(channelId);
+			}
+		}, 3000);
+	}, [channelId, currentUser]);
+	
+	const handleTypingStop = useCallback(() => {
+		if (typingTimeoutRef.current) {
+			clearTimeout(typingTimeoutRef.current);
+		}
+		if (isTypingRef.current) {
+			isTypingRef.current = false;
+			webSocketService.stopTyping(channelId);
+		}
+	}, [channelId]);
+	
+	const handleTextChange = (text: string) => {
+		setMessage(text);
+		
+		if (text.trim().length > 0) {
+			handleTypingStart();
+		} else {
+			handleTypingStop();
+		}
+	};
 
 	const handleSend = () => {
 		if ((!message.trim() && attachments.length === 0) || disabled) return;
+		
+		// Stop typing indicator before sending
+		handleTypingStop();
 		
 		onSendMessage(message, attachments);
 		setMessage('');
@@ -59,9 +113,9 @@ export default function MessageInput({
 		} else {
 			// For mobile, show placeholder message
 			Alert.alert(
-				'File Attachment',
-				'File attachment feature will be implemented soon for mobile',
-				[{ text: 'OK' }]
+				getStrings().Chat.File_Attachment,
+				getStrings().Chat.File_Feature_Coming_Soon,
+				[{ text: getStrings().Chat.OK }]
 			);
 		}
 	};
@@ -113,9 +167,11 @@ export default function MessageInput({
 					onPress={pickDocument}
 					disabled={disabled}
 				>
-					<Text style={[styles.attachButtonText, { color: colors.tint }]}>
-						{'+'}
-					</Text>
+					<Ionicons 
+						name="add-circle-outline" 
+						size={24} 
+						color={colors.tint}
+					/>
 				</TouchableOpacity>
 
 				<TextInput
@@ -128,12 +184,13 @@ export default function MessageInput({
 						}
 					]}
 					value={message}
-					onChangeText={setMessage}
+					onChangeText={handleTextChange}
 					placeholder={placeholder}
 					placeholderTextColor={colors.placeholder || colors.tabIconDefault}
 					multiline={true}
 					maxLength={2000}
 					editable={!disabled}
+					onBlur={handleTypingStop}
 				/>
 
 				<TouchableOpacity
@@ -148,14 +205,14 @@ export default function MessageInput({
 					onPress={handleSend}
 					disabled={(!message.trim() && attachments.length === 0) || disabled}
 				>
-					<Text style={[
-						styles.sendButtonText,
-						{
-							color: (message.trim() || attachments.length > 0) && !disabled
-								? colors.background
-								: colors.text
+					<Ionicons 
+						name="send-sharp" 
+						size={20} 
+						color={(message.trim() || attachments.length > 0) && !disabled
+							? colors.background
+							: colors.text
 						}
-					]}>Send</Text>
+					/>
 				</TouchableOpacity>
 			</View>
 		</View>
@@ -216,32 +273,22 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 		alignItems: 'center',
 	},
-	attachButtonText: {
-		fontSize: 20,
-		fontWeight: 'bold',
-		lineHeight: 20,
-		textAlign: 'center',
-	},
 	textInput: {
 		flex: 1,
 		minHeight: 40,
-		maxHeight: 120,
+		maxHeight: 40,
 		borderWidth: 1,
 		borderRadius: 20,
 		paddingHorizontal: 16,
-		paddingVertical: 11,
+		paddingVertical: 7,
 		fontSize: 16,
 		textAlignVertical: 'center',
 	},
 	sendButton: {
-		paddingHorizontal: 16,
-		paddingVertical: 10,
+		width: 40,
+		height: 40,
 		borderRadius: 20,
 		justifyContent: 'center',
 		alignItems: 'center',
-	},
-	sendButtonText: {
-		fontSize: 14,
-		fontWeight: '600',
 	},
 });

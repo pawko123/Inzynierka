@@ -4,6 +4,7 @@ import {
 	Text,
 	StyleSheet,
 } from 'react-native';
+import { getStrings } from '@/i18n';
 import MessageAttachment from './attachment/MessageAttachment';
 
 interface MessageAttachmentData {
@@ -22,7 +23,7 @@ interface MessageSender {
 
 interface Message {
 	messageId: string;
-	content: string;
+	content: string | null;
 	channelId: string;
 	sender?: MessageSender; // Make sender optional to handle undefined cases
 	attachments: MessageAttachmentData[];
@@ -36,34 +37,45 @@ interface MessageItemProps {
 }
 
 export default function MessageItem({ message, serverId, colors }: MessageItemProps) {
+	const Resources = getStrings();
+	
 	const formatTime = (date: Date) => {
-		const messageDate = new Date(date);
-		const now = new Date();
-		const diffTime = now.getTime() - messageDate.getTime();
-		const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+		try {
+			const messageDate = new Date(date);
+			if (isNaN(messageDate.getTime())) {
+				return 'Invalid Date';
+			}
+			
+			const now = new Date();
+			const diffTime = now.getTime() - messageDate.getTime();
+			const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-		if (diffDays === 0) {
-			// Today - show time only
-			return messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-		} else if (diffDays === 1) {
-			// Yesterday
-			return `Yesterday ${messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-		} else if (diffDays < 7) {
-			// This week - show day and time
-			return messageDate.toLocaleDateString([], { 
-				weekday: 'short', 
-				hour: '2-digit', 
-				minute: '2-digit' 
-			});
-		} else {
-			// Older - show date and time
-			return messageDate.toLocaleDateString([], {
-				month: 'short',
-				day: 'numeric',
-				year: messageDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-				hour: '2-digit',
-				minute: '2-digit',
-			});
+			if (diffDays === 0) {
+				// Today - show time only
+				return messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+			} else if (diffDays === 1) {
+				// Yesterday
+				return `Yesterday ${messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+			} else if (diffDays < 7) {
+				// This week - show day and time
+				return messageDate.toLocaleDateString([], { 
+					weekday: 'short', 
+					hour: '2-digit', 
+					minute: '2-digit' 
+				});
+			} else {
+				// Older - show date and time
+				return messageDate.toLocaleDateString([], {
+					month: 'short',
+					day: 'numeric',
+					year: messageDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+					hour: '2-digit',
+					minute: '2-digit',
+				});
+			}
+		} catch (error) {
+			console.error('Error formatting time:', error);
+			return 'Invalid Date';
 		}
 	};
 
@@ -71,16 +83,16 @@ export default function MessageItem({ message, serverId, colors }: MessageItemPr
 		<View style={[styles.messageContainer, { borderBottomColor: colors.border }]}>
 			<View style={styles.messageHeader}>
 				<Text style={[styles.senderName, { color: colors.text }]}>
-					{message.sender?.memberName || 'Unknown User'}
+					{(message.sender?.memberName || Resources.Chat.Unknown_User).toString()}
 				</Text>
 				<Text style={[styles.timestamp, { color: colors.tabIconDefault }]}>
 					{formatTime(message.createdAt)}
 				</Text>
 			</View>
 			
-			{message.content && (
+			{message.content && typeof message.content === 'string' && message.content.trim() && (
 				<Text style={[styles.messageContent, { color: colors.text }]}>
-					{message.content}
+					{message.content.toString().trim()}
 				</Text>
 			)}
 

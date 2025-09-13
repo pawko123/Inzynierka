@@ -265,5 +265,20 @@
 			"Name": "Deafen Members",
 			"Description": "Allow users to deafen other members in this channel"
 		}
+	},
+	"Chat": {
+		"Loading_Messages": "Loading messages...",
+		"Load_More_Messages": "Load More Messages",
+		"Loading_More_Messages": "Loading more messages...",
+		"Loading": "Loading...",
+		"No_Messages": "No messages yet. Start the conversation!",
+		"Failed_To_Load": "Failed to load messages",
+		"Failed_To_Send": "Failed to send message",
+		"Error": "Error",
+		"File_Attachment": "File Attachment",
+		"File_Feature_Coming_Soon": "File attachment feature will be implemented soon for mobile",
+		"OK": "OK",
+		"Message_Placeholder": "Message",
+		"Unknown_User": "Unknown User"
 	}
 }

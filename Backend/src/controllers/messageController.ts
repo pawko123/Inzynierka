@@ -8,6 +8,8 @@ import { User } from '../models/User';
 import { MessageAttachment } from '../models/MessageAttachment';
 import { MessageDTO } from './dto/message/message.dto';
 import { Brackets } from 'typeorm/query-builder/Brackets';
+import { emitMessageEvent } from '../services/websocketService';
+import { Server as SocketIOServer } from 'socket.io';
 
 const createMessage = async (req: Request, res: Response) => {
 	const files = req.files as Express.Multer.File[];
@@ -52,20 +54,40 @@ const createMessage = async (req: Request, res: Response) => {
 
 			await messageRepo.save(message);
 
+			// Get the complete message data with sender information for WebSocket
+			const savedMessage = await messageRepo.findOne({
+				where: { id: message.id },
+				relations: ['sender', 'channel', 'attachments', 'sender.memberships'],
+			});
+
+			if (!savedMessage) {
+				throw new Error('Failed to retrieve saved message');
+			}
+
 			const sterilizedMessage = {
-				messageId: message.id,
-				content: message.content,
-				channelId: message.channel.id,
-				senderId: message.sender.id,
-				attachments: message.attachments.map((attachment) => ({
+				messageId: savedMessage.id,
+				content: savedMessage.content,
+				channelId: savedMessage.channel.id,
+				sender: {
+					id: savedMessage.sender.memberships?.[0]?.id || undefined,
+					userId: savedMessage.sender.id,
+					memberName: savedMessage.sender.memberships?.[0]?.memberName || savedMessage.sender.username,
+				},
+				attachments: savedMessage.attachments.map((attachment) => ({
 					id: attachment.id,
 					fileName: attachment.fileName,
 					url: attachment.url,
 					fileType: attachment.fileType,
 					size: attachment.size,
 				})),
-				createdAt: message.sentAt,
+				createdAt: savedMessage.sentAt,
 			};
+
+			// Emit WebSocket event for new message with complete sender info
+			const io = req.app.get('io') as SocketIOServer;
+			if (io) {
+				emitMessageEvent(io, 'message-created', savedMessage.channel.id, sterilizedMessage);
+			}
 
 			return res.status(201).json(sterilizedMessage);
 		});
@@ -123,6 +145,15 @@ const deleteMessage = async (req: Request, res: Response) => {
 
 			await messageRepo.remove(message);
 
+			// Emit WebSocket event for message deletion
+			const io = req.app.get('io') as SocketIOServer;
+			if (io) {
+				emitMessageEvent(io, 'message-deleted', message.channel.id, { 
+					messageId: String(messageId),
+					channelId: message.channel.id
+				});
+			}
+
 			return res.status(200).json({ message: 'Message deleted successfully.' });
 		});
 	} catch (error) {
@@ -156,7 +187,42 @@ const updateMessage = async (req: Request, res: Response) => {
 
 			await messageRepo.save(message);
 
-			return res.status(200).json(message);
+			// Get the complete message data with sender information for WebSocket
+			const updatedMessage = await messageRepo.findOne({
+				where: { id: message.id },
+				relations: ['sender', 'channel', 'attachments', 'sender.memberships'],
+			});
+
+			if (!updatedMessage) {
+				throw new Error('Failed to retrieve updated message');
+			}
+
+			const sterilizedUpdatedMessage = {
+				messageId: updatedMessage.id,
+				content: updatedMessage.content,
+				channelId: updatedMessage.channel.id,
+				sender: {
+					id: updatedMessage.sender.memberships?.[0]?.id || undefined,
+					userId: updatedMessage.sender.id,
+					memberName: updatedMessage.sender.memberships?.[0]?.memberName || updatedMessage.sender.username,
+				},
+				attachments: updatedMessage.attachments.map((attachment) => ({
+					id: attachment.id,
+					fileName: attachment.fileName,
+					url: attachment.url,
+					fileType: attachment.fileType,
+					size: attachment.size,
+				})),
+				createdAt: updatedMessage.sentAt,
+			};
+
+			// Emit WebSocket event for message update
+			const io = req.app.get('io') as SocketIOServer;
+			if (io) {
+				emitMessageEvent(io, 'message-updated', updatedMessage.channel.id, sterilizedUpdatedMessage);
+			}
+
+			return res.status(200).json(sterilizedUpdatedMessage);
 		});
 	} catch (error) {
 		console.error('Error updating message:', error);
@@ -166,7 +232,7 @@ const updateMessage = async (req: Request, res: Response) => {
 
 const getChannelMessages = async (req: Request, res: Response) => {
 	const { channelId, serverId } = req.query;
-	const { limit = 50 } = req.query;
+	const { limit = 10 } = req.query;
 
 	if (!channelId) {
 		return res.status(400).json({ error: 'Channel ID is required.' });
@@ -197,7 +263,7 @@ const getChannelMessages = async (req: Request, res: Response) => {
 
 		const sterilizedMessages: MessageDTO[] = messages.map((message) => ({
 			messageId: message.id,
-			content: message.content,
+			content: message.content && message.content.trim() ? message.content : null,
 			channelId: message.channel.id,
 			sender: {
 				id: message.sender.memberships?.[0]?.id || undefined,
@@ -223,7 +289,7 @@ const getChannelMessages = async (req: Request, res: Response) => {
 
 const getNextMessages = async (req: Request, res: Response) => {
 	const { channelId, serverId } = req.query;
-	const { lastMessageId, limit = 5 } = req.query;
+	const { lastMessageId, limit = 10 } = req.query;
 
 	if (!channelId) {
 		return res.status(400).json({ error: 'Channel ID is required.' });
@@ -280,9 +346,8 @@ const getNextMessages = async (req: Request, res: Response) => {
 		const messages = await qb.getMany();
 		const sterilizedMessages: MessageDTO[] = messages.map((message) => ({
 			messageId: message.id,
-			content: message.content,
+			content: message.content && message.content.trim() ? message.content : null,
 			channelId: message.channel.id,
-			senderId: message.sender.id,
 			sender: {
 				id: message.sender.memberships?.[0]?.id || undefined,
 				userId: message.sender.id,

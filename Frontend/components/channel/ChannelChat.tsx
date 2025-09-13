@@ -8,11 +8,15 @@ import {
 	KeyboardAvoidingView,
 	Platform,
 	Alert,
+	TouchableOpacity,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { api } from '@/services/api';
 import { translateError } from '@/utils/errorTranslator';
+import { webSocketService } from '@/services/WebSocketService';
+import { getStrings } from '@/i18n';
+import type { MessageData, MessageDeletedData, MessageUpdatedData } from '@/services/WebSocketService';
 import MessageItem from '../message/MessageItem';
 import MessageInput from '../message/MessageInput';
 
@@ -39,7 +43,7 @@ interface MessageSender {
 
 interface Message {
 	messageId: string;
-	content: string;
+	content: string | null;
 	channelId: string;
 	sender: MessageSender;
 	attachments: MessageAttachment[];
@@ -70,7 +74,6 @@ export default function ChannelChat({ channel, serverId }: ChannelChatProps) {
 
 			const params: any = {
 				channelId: channel.id,
-				limit: 50,
 			};
 			
 			// Only add serverId for server channels, not for direct channels
@@ -83,13 +86,18 @@ export default function ChannelChat({ channel, serverId }: ChannelChatProps) {
 			});
 
 			const fetchedMessages = response.data || [];
-			// Messages come in DESC order (newest first), so reverse for chat display
-			setMessages(fetchedMessages.reverse());
-			setHasMore(fetchedMessages.length === 50);
+			// Messages come in DESC order (newest first) - keep this order for inverted FlatList
+			// Also normalize content field to handle empty strings and nulls
+			const normalizedMessages = fetchedMessages.map((msg: any) => ({
+				...msg,
+				content: msg.content && msg.content.trim() ? msg.content : null
+			}));
+			setMessages(normalizedMessages);
+			setHasMore(fetchedMessages.length === 10);
 		} catch (err: any) {
 			console.error('Error fetching messages:', err);
-			const errorMessage = translateError(err.response?.data?.error || 'Failed to load messages');
-			Alert.alert('Error', errorMessage);
+			const errorMessage = translateError(err.response?.data?.error || getStrings().Chat.Failed_To_Load);
+			Alert.alert(getStrings().Chat.Error, errorMessage);
 		} finally {
 			setLoading(false);
 		}
@@ -100,7 +108,7 @@ export default function ChannelChat({ channel, serverId }: ChannelChatProps) {
 
 		try {
 			setLoadingMore(true);
-			const oldestMessage = messages[0];
+			const oldestMessage = messages[messages.length - 1]; // Last message in inverted list is oldest
 
 			const params: any = {
 				channelId: channel.id,
@@ -119,16 +127,20 @@ export default function ChannelChat({ channel, serverId }: ChannelChatProps) {
 
 			const olderMessages = response.data || [];
 			if (olderMessages.length > 0) {
-				// Reverse because they come in DESC order
-				setMessages(prev => [...olderMessages.reverse(), ...prev]);
+				// Messages come in DESC order, keep this order and normalize content
+				const normalizedOlderMessages = olderMessages.map((msg: any) => ({
+					...msg,
+					content: msg.content && msg.content.trim() ? msg.content : null
+				}));
+				setMessages(prev => [...prev, ...normalizedOlderMessages]); // Append to end for inverted list
 				setHasMore(olderMessages.length === 20);
 			} else {
 				setHasMore(false);
 			}
 		} catch (err: any) {
 			console.error('Error loading more messages:', err);
-			const errorMessage = translateError(err.response?.data?.error || 'Failed to load more messages');
-			Alert.alert('Error', errorMessage);
+			const errorMessage = translateError(err.response?.data?.error || getStrings().Chat.Failed_To_Load);
+			Alert.alert(getStrings().Chat.Error, errorMessage);
 		} finally {
 			setLoadingMore(false);
 		}
@@ -183,19 +195,15 @@ export default function ChannelChat({ channel, serverId }: ChannelChatProps) {
 				},
 			});
 
-			// Add new message to the list
-			const newMessage = response.data;
-			setMessages(prev => [...prev, newMessage]);
+			console.log('Message sent successfully:', response.data);
 
-			// Scroll to bottom
-			setTimeout(() => {
-				flatListRef.current?.scrollToEnd({ animated: true });
-			}, 100);
+			// Note: We don't add the message locally here because it will be added
+			// via WebSocket when the server broadcasts it to all connected clients
 
 		} catch (err: any) {
 			console.error('Error sending message:', err);
-			const errorMessage = translateError(err.response?.data?.error || 'Failed to send message');
-			Alert.alert('Error', errorMessage);
+			const errorMessage = translateError(err.response?.data?.error || getStrings().Chat.Failed_To_Send);
+			Alert.alert(getStrings().Chat.Error, errorMessage);
 		} finally {
 			setSending(false);
 		}
@@ -203,24 +211,97 @@ export default function ChannelChat({ channel, serverId }: ChannelChatProps) {
 
 	useEffect(() => {
 		fetchMessages();
-	}, [fetchMessages]);
+		
+		// Join the channel room for real-time updates
+		webSocketService.joinChannel(channel.id, serverId);
+		
+		// Set up WebSocket event listeners
+		const handleNewMessage = (messageData: MessageData) => {
+			if (messageData.channelId === channel.id) {
+				console.log('Received new message via WebSocket:', messageData);
+				setMessages(prev => {
+					// Check if message already exists (to avoid duplicates)
+					const exists = prev.some(msg => msg.messageId === messageData.messageId);
+					if (!exists) {
+						return [{
+							messageId: messageData.messageId,
+							content: messageData.content && messageData.content.trim() ? messageData.content : null,
+							channelId: messageData.channelId,
+							sender: messageData.sender,
+							attachments: messageData.attachments || [],
+							createdAt: new Date(messageData.createdAt),
+						}, ...prev]; // Prepend to beginning for inverted list
+					}
+					return prev;
+				});
+			}
+		};
+		
+		const handleMessageDeleted = (data: MessageDeletedData) => {
+			if (data.channelId === channel.id) {
+				console.log('Message deleted via WebSocket:', data);
+				setMessages(prev => prev.filter(msg => msg.messageId !== data.messageId));
+			}
+		};
+		
+		const handleMessageUpdated = (data: MessageUpdatedData) => {
+			if (data.channelId === channel.id) {
+				console.log('Message updated via WebSocket:', data);
+				setMessages(prev => prev.map(msg => 
+					msg.messageId === data.messageId 
+						? { ...msg, content: data.content }
+						: msg
+				));
+			}
+		};
+		
+		// Register event listeners
+		webSocketService.on('message-created', handleNewMessage);
+		webSocketService.on('message-deleted', handleMessageDeleted);
+		webSocketService.on('message-updated', handleMessageUpdated);
+		
+		// Cleanup function
+		return () => {
+			webSocketService.leaveChannel(channel.id, serverId);
+			webSocketService.off('message-created', handleNewMessage);
+			webSocketService.off('message-deleted', handleMessageDeleted);
+			webSocketService.off('message-updated', handleMessageUpdated);
+		};
+	}, [channel.id, serverId, fetchMessages]);
 
-	const renderMessage = ({ item }: { item: Message }) => (
-		<MessageItem
-			message={item}
-			serverId={serverId}
-			colors={colors}
-		/>
-	);
+	const renderMessage = ({ item }: { item: Message }) => {
+		return (
+			<MessageItem
+				message={item}
+				serverId={serverId}
+				colors={colors}
+			/>
+		);
+	};
 
 	const renderHeader = () => {
-		if (!loadingMore || !hasMore) return null;
+		if (!hasMore) return null;
+		
 		return (
-			<View style={styles.loadingMore}>
-				<ActivityIndicator size="small" color={colors.tint} />
-				<Text style={[styles.loadingText, { color: colors.tabIconDefault }]}>
-					Loading more messages...
-				</Text>
+			<View style={styles.loadMoreContainer}>
+				{loadingMore ? (
+					<View style={styles.loadingMore}>
+						<ActivityIndicator size="small" color={colors.tint} />
+						<Text style={[styles.loadingText, { color: colors.tabIconDefault }]}>
+							{getStrings().Chat.Loading_More_Messages}
+						</Text>
+					</View>
+				) : (
+					<TouchableOpacity 
+						style={[styles.loadMoreButton, { borderColor: colors.border, backgroundColor: colors.card }]}
+						onPress={loadMoreMessages}
+						disabled={loadingMore}
+					>
+						<Text style={[styles.loadMoreButtonText, { color: colors.tint }]}>
+							{getStrings().Chat.Load_More_Messages}
+						</Text>
+					</TouchableOpacity>
+				)}
 			</View>
 		);
 	};
@@ -230,7 +311,7 @@ export default function ChannelChat({ channel, serverId }: ChannelChatProps) {
 			<View style={[styles.container, styles.loadingContainer, { backgroundColor: colors.background }]}>
 				<ActivityIndicator size="large" color={colors.tint} />
 				<Text style={[styles.loadingText, { color: colors.tabIconDefault }]}>
-					Loading messages...
+					{getStrings().Chat.Loading_Messages}
 				</Text>
 			</View>
 		);
@@ -257,11 +338,12 @@ export default function ChannelChat({ channel, serverId }: ChannelChatProps) {
 				keyExtractor={(item) => item.messageId}
 				style={styles.messagesList}
 				contentContainerStyle={styles.messagesContainer}
-				ListHeaderComponent={renderHeader}
-				onEndReached={loadMoreMessages}
-				onEndReachedThreshold={0.1}
-				inverted={false}
+				ListFooterComponent={renderHeader}
+				inverted={true}
 				showsVerticalScrollIndicator={false}
+				initialNumToRender={10}
+				maxToRenderPerBatch={10}
+				windowSize={10}
 			/>
 
 			{/* Message Input */}
@@ -269,7 +351,8 @@ export default function ChannelChat({ channel, serverId }: ChannelChatProps) {
 				onSendMessage={sendMessage}
 				disabled={sending}
 				colors={colors}
-				placeholder={`Message #${channel.name}`}
+				placeholder={`${getStrings().Chat.Message_Placeholder} #${channel.name}`}
+				channelId={channel.id}
 			/>
 		</KeyboardAvoidingView>
 	);
@@ -303,6 +386,21 @@ const styles = StyleSheet.create({
 		padding: 16,
 		alignItems: 'center',
 		gap: 8,
+	},
+	loadMoreContainer: {
+		paddingHorizontal: 16,
+		paddingVertical: 8,
+	},
+	loadMoreButton: {
+		paddingVertical: 12,
+		paddingHorizontal: 16,
+		borderRadius: 8,
+		borderWidth: 1,
+		alignItems: 'center',
+	},
+	loadMoreButtonText: {
+		fontSize: 14,
+		fontWeight: '500',
 	},
 	loadingText: {
 		fontSize: 14,
