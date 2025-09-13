@@ -312,6 +312,56 @@ const getServerChannels = async (req: Request, res: Response) => {
 	}
 };
 
+const getServerChannelsForUser = async (req: Request, res: Response) => {
+	const { serverId } = req.query;
+	const { userId } = req.body; // From token middleware
+	
+	if (!serverId) {
+		return res.status(400).json({ error: 'Missing serverId.' });
+	}
+	if (!userId) {
+		return res.status(400).json({ error: 'Missing userId.' });
+	}
+	
+	try {
+		const channelRepo = AppDataSource.getRepository('Channel');
+		const channels = await channelRepo.find({
+			where: { server: { id: String(serverId) }, isDirect: false },
+		});
+
+		// Filter channels based on VIEW_CHANNEL permission
+		const visibleChannels = [];
+		for (const channel of channels) {
+			try {
+				const permissions = await checkUserPermissions(
+					String(userId),
+					String(serverId),
+					channel.id,
+					[PermissionType.VIEW_CHANNEL]
+				);
+				
+				// Only include channel if user has VIEW_CHANNEL permission
+				if (permissions.VIEW_CHANNEL) {
+					visibleChannels.push({
+						id: channel.id,
+						name: channel.name,
+						type: channel.type,
+						createdAt: channel.createdAt,
+					});
+				}
+			} catch (error) {
+				console.error(`Error checking permissions for channel ${channel.id}:`, error);
+				// Skip this channel if permission check fails
+			}
+		}
+
+		return res.status(200).json(visibleChannels);
+	} catch (err) {
+		console.error(err);
+		return res.status(500).json({ error: 'Internal server error.' });
+	}
+};
+
 const getUserPermissions = async (req: Request, res: Response) => {
 	try {
 		const { serverId, userId, permissions } = req.body;
@@ -347,6 +397,41 @@ const getUserPermissions = async (req: Request, res: Response) => {
 	}
 };
 
+const getUserPermissionsOnChannel = async (req: Request, res: Response) => {
+	try {
+		const { serverId, userId, channelId, permissions } = req.body;
+		
+		if (!channelId || !userId) {
+			return res.status(400).json({ error: 'Missing channelId or userId.' });
+		}
+
+		// Parse permissions array from body
+		let permissionsToCheck: string[] = [];
+		if (permissions) {
+			if (Array.isArray(permissions)) {
+				permissionsToCheck = permissions as string[];
+			} else {
+				permissionsToCheck = [permissions as string];
+			}
+		} else {
+			// Default: check all permissions
+			permissionsToCheck = Object.values(PermissionType);
+		}
+
+		const result = await checkUserPermissions(
+			String(userId),
+			serverId ? String(serverId) : undefined,
+			String(channelId),
+			permissionsToCheck
+		);
+
+		return res.status(200).json(result);
+	} catch (err) {
+		console.error('Error checking user permissions on channel:', err);
+		return res.status(500).json({ error: 'Internal server error.' });
+	}
+};
+
 export const serverController = {
 	createServer,
 	deleteServer,
@@ -355,5 +440,7 @@ export const serverController = {
 	getServer,
 	getServerMembers,
 	getServerChannels,
+	getServerChannelsForUser,
 	getUserPermissions,
+	getUserPermissionsOnChannel,
 };

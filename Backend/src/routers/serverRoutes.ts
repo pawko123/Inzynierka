@@ -33,9 +33,16 @@ serverRouter.get(
 serverRouter.get(
 	'/getChannels',
 	verifyTokenMiddleware,
-	checkUserPermission(PermissionType.SERVER_MEMBER),
+	checkUserPermission(PermissionType.MANAGE_SERVER),
 	serverController.getServerChannels,
 );
+serverRouter.get(
+	'/getChannelsForUser',
+	verifyTokenMiddleware,
+	checkUserPermission(PermissionType.SERVER_MEMBER),
+	serverController.getServerChannelsForUser,
+);
 serverRouter.post('/getUserPermissions', verifyTokenMiddleware, serverController.getUserPermissions);
+serverRouter.post('/getUserPermissionsOnChannel', verifyTokenMiddleware, serverController.getUserPermissionsOnChannel);
 
 export default serverRouter;

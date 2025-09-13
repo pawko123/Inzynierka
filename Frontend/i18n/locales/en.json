@@ -279,6 +279,10 @@
 		"File_Feature_Coming_Soon": "File attachment feature will be implemented soon for mobile",
 		"OK": "OK",
 		"Message_Placeholder": "Message",
-		"Unknown_User": "Unknown User"
+		"Unknown_User": "Unknown User",
+		"Edit_Message": "Edit",
+		"Delete_Message": "Delete",
+		"Cancel": "Cancel",
+		"Save": "Save"
 	}
 }

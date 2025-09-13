@@ -38,7 +38,7 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 			setLoading(true);
 			setError(null);
 			
-			const { data } = await api.get(`/server/getChannels?serverId=${serverId}`);
+			const { data } = await api.get(`/server/getChannelsForUser?serverId=${serverId}`);
 			setChannels(data);
 		} catch (err: any) {
 			console.error('Error fetching server channels:', err);

@@ -279,6 +279,10 @@
 		"File_Feature_Coming_Soon": "Funkcja załączników zostanie wkrótce zaimplementowana na urządzeniach mobilnych",
 		"OK": "OK",
 		"Message_Placeholder": "Wiadomość",
-		"Unknown_User": "Nieznany użytkownik"
+		"Unknown_User": "Nieznany użytkownik",
+		"Edit_Message": "Edytuj",
+		"Delete_Message": "Usuń",
+		"Cancel": "Anuluj",
+		"Save": "Zapisz"
 	}
 }

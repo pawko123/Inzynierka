@@ -27,6 +27,10 @@ export interface MessageItemProps {
 	message: Message;
 	serverId?: string;
 	colors: any;
+	onDeleteMessage?: (messageId: string) => void;
+	onEditMessage?: (messageId: string, newContent: string) => void;
+	canEdit?: boolean;
+	canDelete?: boolean;
 }
 
 export interface MessageInputProps {

@@ -109,6 +109,7 @@ const createMessage = async (req: Request, res: Response) => {
 
 const deleteMessage = async (req: Request, res: Response) => {
 	const { messageId } = req.query;
+	const { userId } = req.body; // Get userId from token middleware
 
 	if (!messageId) {
 		return res.status(400).json({ error: 'Message ID is required.' });
@@ -120,13 +121,23 @@ const deleteMessage = async (req: Request, res: Response) => {
 
 			const message = await messageRepo.findOne({
 				where: { id: String(messageId) },
-				relations: ['attachments'],
+				relations: ['attachments', 'sender', 'channel', 'channel.server'],
 			});
 
 			if (!message) {
 				return res.status(404).json({ error: 'Message not found.' });
 			}
 
+			// Check if user is the message author
+			const isAuthor = message.sender?.id === userId;
+			
+			// If not the author, check if user has MANAGE_MESSAGES permission
+			// (The middleware already checked this, but for direct channels we need special handling)
+			if (!isAuthor && message.channel.isDirect) {
+				return res.status(403).json({ error: 'You can only delete your own messages in direct channels.' });
+			}
+
+			// Delete attachment files
 			for (const attachment of message.attachments) {
 				if (attachment.url && typeof attachment.url === 'string') {
 					try {
@@ -150,7 +161,8 @@ const deleteMessage = async (req: Request, res: Response) => {
 			if (io) {
 				emitMessageEvent(io, 'message-deleted', message.channel.id, { 
 					messageId: String(messageId),
-					channelId: message.channel.id
+					channelId: message.channel.id,
+					serverId: message.channel.server?.id || null,
 				});
 			}
 
@@ -163,27 +175,30 @@ const deleteMessage = async (req: Request, res: Response) => {
 };
 
 const updateMessage = async (req: Request, res: Response) => {
-	const { messageId } = req.body;
-	const { content } = req.body;
+	const { messageId, content } = req.body;
 
 	if (!messageId) {
 		return res.status(400).json({ error: 'Message ID is required.' });
 	}
 
-	if (content === undefined || content === null) {
-		return res.status(400).json({ error: 'Content is required.' });
+	if (content === undefined || content === null || content.trim().length === 0) {
+		return res.status(400).json({ error: 'Content is required and cannot be empty.' });
 	}
 
 	try {
 		await AppDataSource.transaction(async (manager) => {
 			const messageRepo = manager.getRepository(Message);
 
-			const message = await messageRepo.findOne({ where: { id: String(messageId) } });
+			const message = await messageRepo.findOne({ 
+				where: { id: String(messageId) },
+				relations: ['sender', 'channel', 'channel.server']
+			});
+			
 			if (!message) {
 				return res.status(404).json({ error: 'Message not found.' });
 			}
 
-			message.content = content;
+			message.content = content.trim();
 
 			await messageRepo.save(message);
 
@@ -197,39 +212,36 @@ const updateMessage = async (req: Request, res: Response) => {
 				throw new Error('Failed to retrieve updated message');
 			}
 
-			const sterilizedUpdatedMessage = {
-				messageId: updatedMessage.id,
-				content: updatedMessage.content,
-				channelId: updatedMessage.channel.id,
-				sender: {
-					id: updatedMessage.sender.memberships?.[0]?.id || undefined,
-					userId: updatedMessage.sender.id,
-					memberName: updatedMessage.sender.memberships?.[0]?.memberName || updatedMessage.sender.username,
-				},
-				attachments: updatedMessage.attachments.map((attachment) => ({
-					id: attachment.id,
-					fileName: attachment.fileName,
-					url: attachment.url,
-					fileType: attachment.fileType,
-					size: attachment.size,
-				})),
-				createdAt: updatedMessage.sentAt,
-			};
-
 			// Emit WebSocket event for message update
 			const io = req.app.get('io') as SocketIOServer;
 			if (io) {
-				emitMessageEvent(io, 'message-updated', updatedMessage.channel.id, sterilizedUpdatedMessage);
+				emitMessageEvent(io, 'message-updated', message.channel.id, {
+					messageId: message.id,
+					channelId: message.channel.id,
+					serverId: message.channel.server?.id || null,
+					content: message.content,
+					sender: {
+						id: updatedMessage.sender.memberships?.[0]?.id || undefined,
+						userId: updatedMessage.sender.id,
+						memberName: updatedMessage.sender.memberships?.[0]?.memberName || updatedMessage.sender.username,
+					},
+					updatedAt: new Date(),
+				});
 			}
 
-			return res.status(200).json(sterilizedUpdatedMessage);
+			return res.status(200).json({ 
+				message: 'Message updated successfully.',
+				data: {
+					messageId: message.id,
+					content: message.content,
+				}
+			});
 		});
 	} catch (error) {
 		console.error('Error updating message:', error);
 		return res.status(500).json({ error: 'Internal server error.' });
 	}
 };
-
 const getChannelMessages = async (req: Request, res: Response) => {
 	const { channelId, serverId } = req.query;
 	const { limit = 10 } = req.query;

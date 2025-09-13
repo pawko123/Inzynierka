@@ -13,9 +13,11 @@ import {
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { api } from '@/services/api';
+import { MessageService } from '@/services/MessageService';
 import { translateError } from '@/utils/errorTranslator';
 import { webSocketService } from '@/services/WebSocketService';
 import { getStrings } from '@/i18n';
+import { useAuth } from '@/contexts/AuthContext';
 import type { MessageData, MessageDeletedData, MessageUpdatedData } from '@/services/WebSocketService';
 import { ChannelChatProps } from '@/types/server';
 import { Message } from '@/types/message';
@@ -26,12 +28,14 @@ export default function ChannelChat({ channel, serverId }: ChannelChatProps) {
 	const colorScheme = useColorScheme();
 	const colors = Colors[colorScheme ?? 'light'];
 	const flatListRef = useRef<FlatList>(null);
+	const { currentUser } = useAuth();
 
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [loadingMore, setLoadingMore] = useState(false);
 	const [hasMore, setHasMore] = useState(true);
 	const [sending, setSending] = useState(false);
+	const [channelPermissions, setChannelPermissions] = useState<{[key: string]: boolean}>({});
 
 	const fetchMessages = useCallback(async (isInitial = true) => {
 		try {
@@ -176,6 +180,42 @@ export default function ChannelChat({ channel, serverId }: ChannelChatProps) {
 		}
 	}, [channel.id, serverId, sending]);
 
+	// Check permissions once when entering the channel
+	useEffect(() => {
+		const checkChannelPermissions = async () => {
+			if (!currentUser) {
+				setChannelPermissions({});
+				return;
+			}
+
+			try {
+				const isDirect = !serverId || serverId.trim() === '';
+				if (isDirect) {
+					// In direct channels, users can manage their own messages
+					setChannelPermissions({ MANAGE_MESSAGES: true });
+				} else {
+					// Fetch all channel permissions
+					const allChannelPermissions = [
+						'VIEW_CHANNEL', 'SEND_MESSAGES', 'MANAGE_MESSAGES',
+						'CONNECT', 'SPEAK', 'MUTE_MEMBERS', 'DEAFEN_MEMBERS'
+					];
+					
+					const permissions = await MessageService.getUserPermissionsOnChannel(
+						channel.id, 
+						serverId, 
+						allChannelPermissions
+					);
+					setChannelPermissions(permissions);
+				}
+			} catch (error) {
+				console.error('Error checking channel permissions:', error);
+				setChannelPermissions({});
+			}
+		};
+
+		checkChannelPermissions();
+	}, [channel.id, serverId, currentUser]);
+
 	useEffect(() => {
 		fetchMessages();
 		
@@ -243,12 +283,43 @@ export default function ChannelChat({ channel, serverId }: ChannelChatProps) {
 		setLoading(true);
 	}, [channel.id, serverId]);
 
+	const handleDeleteMessage = useCallback((messageId: string) => {
+		setMessages(prev => prev.filter(msg => msg.messageId !== messageId));
+	}, []);
+
+	const handleEditMessage = useCallback((messageId: string, newContent: string) => {
+		setMessages(prev => prev.map(msg => 
+			msg.messageId === messageId 
+				? { ...msg, content: newContent }
+				: msg
+		));
+	}, []);
+
 	const renderMessage = ({ item }: { item: Message }) => {
+		// Determine if the current user can edit/delete this specific message
+		const canEditMessage = Boolean(currentUser && (
+			// User can edit their own messages
+			item.sender?.userId === currentUser.id ||
+			// Or if they have MANAGE_MESSAGES permission
+			channelPermissions.MANAGE_MESSAGES
+		));
+		
+		const canDeleteMessage = Boolean(currentUser && (
+			// User can delete their own messages
+			item.sender?.userId === currentUser.id ||
+			// Or if they have MANAGE_MESSAGES permission
+			channelPermissions.MANAGE_MESSAGES
+		));
+
 		return (
 			<MessageItem
 				message={item}
 				serverId={serverId}
 				colors={colors}
+				onDeleteMessage={handleDeleteMessage}
+				onEditMessage={handleEditMessage}
+				canEdit={canEditMessage}
+				canDelete={canDeleteMessage}
 			/>
 		);
 	};
