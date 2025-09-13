@@ -10,7 +10,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
 import ChannelSection from './ChannelSection';
-import ServerActionButtons from './ServerActionButtons';
+import ServerActionButtons from '../server/ServerActionButtons';
 
 interface Channel {
 	id: string;

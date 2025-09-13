@@ -10,10 +10,11 @@ import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
 import { api } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
-import CreateChannelModal from './CreateChannelModal';
-import ChannelSidebar from './ChannelSidebar';
+import CreateChannelModal from '../channel/CreateChannelModal';
+import ChannelSidebar from '../channel/ChannelSidebar';
 import { translateError } from '@/utils/errorTranslator';
-import RolesManagement from './RolesManagement';
+import RolesManagement from '../rolemanagement/RolesManagement';
+import ChannelChat from '../channel/ChannelChat';
 
 interface Channel {
 	id: string;
@@ -35,6 +36,7 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 	const { currentUser } = useAuth();
 
 	const [channels, setChannels] = useState<Channel[]>([]);
+	const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [showCreateChannelModal, setShowCreateChannelModal] = useState(false);
@@ -90,6 +92,7 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 
 	const handleChannelPress = (channel: Channel) => {
 		console.log('Selected channel:', channel);
+		setSelectedChannel(channel);
 		onChannelSelect?.(channel.id);
 	};
 
@@ -132,6 +135,11 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 						serverId={serverId}
 						serverName={serverName || 'Server'}
 						onClose={() => setShowRolesManagement(false)}
+					/>
+				) : selectedChannel ? (
+					<ChannelChat
+						channel={selectedChannel}
+						serverId={serverId}
 					/>
 				) : (
 					<View style={styles.welcomeContainer}>

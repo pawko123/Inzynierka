@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import { Request, Response } from 'express';
 import { AppDataSource } from '../config/data-source';
 import { Message } from '../models/Message';
@@ -107,9 +108,12 @@ const deleteMessage = async (req: Request, res: Response) => {
 			for (const attachment of message.attachments) {
 				if (attachment.url && typeof attachment.url === 'string') {
 					try {
-						await fs.promises.unlink(
-							`${process.env.FILE_PATH}/${attachment.url.replace(new RegExp('^' + process.env.ATTACHMENTS_PATH), '')}`,
+						const filePath = path.resolve(
+							process.cwd(), 
+							process.env.FILE_PATH || './data',
+							attachment.url.replace(new RegExp('^' + process.env.ATTACHMENTS_PATH), '')
 						);
+						await fs.promises.unlink(filePath);
 					} catch (err) {
 						console.error('Error deleting attachment file:', err);
 						console.warn(`File not found or cannot be deleted: ${attachment.url}`);

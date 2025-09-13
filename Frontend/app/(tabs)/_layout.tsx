@@ -1,18 +1,25 @@
-import { Redirect } from 'expo-router';
-import React, { useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import ServerSidebar from '@/components/ServerSidebar';
+import { ServerSidebar, ServerContent, JoinServerModal } from '@/components/server';
 import WelcomeScreen from '@/components/WelcomeScreen';
-import ServerContent from '@/components/ServerContent';
+import { ChannelChat } from '@/components/channel';
 import CreateModal, { CreateType } from '@/components/CreateModal';
-import JoinServerModal from '@/components/JoinServerModal';
-import type { Server } from '@/types/sidebar';
+import type { Server, DirectChannel } from '@/types/sidebar';
 
 function GuardedTabs({ children }: { children: React.ReactNode }) {
 	const { token, loading } = useAuth();
+	const router = useRouter();
+	
+	useEffect(() => {
+		if (!loading && !token) {
+			router.replace('/(auth)/login');
+		}
+	}, [token, loading, router]);
+	
 	if (loading) return null;
-	if (!token) return <Redirect href="/(auth)/login" />;
+	if (!token) return null; // Will redirect via useEffect
 	return <>{children}</>;
 }
 
@@ -22,17 +29,22 @@ export default function TabLayout() {
 	const [createModalType, setCreateModalType] = useState<CreateType>('server');
 	const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
 	const [selectedServerName, setSelectedServerName] = useState<string>('');
+	const [selectedDirectChannel, setSelectedDirectChannel] = useState<DirectChannel | null>(null);
 
 	const handleServerSelect = (server: Server) => {
 		console.log('Selected server:', server);
 		setSelectedServerId(server.id);
 		setSelectedServerName(server.name);
+		// Clear direct channel selection when selecting a server
+		setSelectedDirectChannel(null);
 	};
 
-	const handleDirectChannelSelect = (channelId: string) => {
-		console.log('Selected direct channel:', channelId);
-		// TODO: Navigate to direct channel view or update context
-		setSelectedServerId(null); // Clear server selection when selecting direct channel
+	const handleDirectChannelSelect = (channel: DirectChannel) => {
+		console.log('Selected direct channel:', channel);
+		// Set direct channel and clear server selection
+		setSelectedDirectChannel(channel);
+		setSelectedServerId(null);
+		setSelectedServerName('');
 	};
 
 	const handleChannelSelect = (channelId: string) => {
@@ -84,6 +96,16 @@ export default function TabLayout() {
 							serverId={selectedServerId}
 							serverName={selectedServerName}
 							onChannelSelect={handleChannelSelect}
+						/>
+					) : selectedDirectChannel ? (
+						<ChannelChat
+							channel={{
+								id: selectedDirectChannel.id,
+								name: selectedDirectChannel.name,
+								type: selectedDirectChannel.type,
+								createdAt: new Date().toISOString(),
+							}}
+							serverId="" // Direct channels don't have a server
 						/>
 					) : (
 						<WelcomeScreen 

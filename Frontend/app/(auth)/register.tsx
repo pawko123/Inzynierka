@@ -29,7 +29,7 @@ export default function RegisterScreen() {
 		try {
 			setLoading(true);
 			await register({ username, email, password, repeatPassword });
-			router.replace('/(tabs)');
+			router.replace('/(tabs)' as any);
 		} catch (e: any) {
 			Alert.alert(
 				Resources.Auth.Errors.Register_failed,

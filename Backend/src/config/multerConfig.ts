@@ -36,7 +36,15 @@ const allowedMimeTypes = [
 
 const storage = multer.diskStorage({
 	destination: function (req, file, cb) {
-		cb(null, path.resolve(process.env.FILE_PATH));
+		// Resolve path relative to project root (where package.json is located)
+		const uploadPath = path.resolve(process.cwd(), process.env.FILE_PATH || './data');
+		
+		// Ensure directory exists
+		if (!fs.existsSync(uploadPath)) {
+			fs.mkdirSync(uploadPath, { recursive: true });
+		}
+		
+		cb(null, uploadPath);
 	},
 	filename: function (req, file, cb) {
 		const ext = path.extname(file.originalname);

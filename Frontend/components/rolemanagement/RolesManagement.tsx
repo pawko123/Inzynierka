@@ -15,8 +15,8 @@ import { translateError } from '@/utils/errorTranslator';
 import CreateRoleModal from './CreateRoleModal';
 import RoleDetailsModal from './RoleDetailsModal';
 import MemberRoleModal from './MemberRoleModal';
-import ServerRolesTab from './ServerRolesTab';
-import ServerMembersTab from './ServerMembersTab';
+import ServerRolesTab from '../server/ServerRolesTab';
+import ServerMembersTab from '../server/ServerMembersTab';
 import { createPermissionCategories } from '@/utils/permissions';
 
 interface Role {

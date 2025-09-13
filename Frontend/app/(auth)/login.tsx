@@ -21,7 +21,7 @@ export default function LoginScreen() {
 		try {
 			setLoading(true);
 			await signIn({ email, password });
-			router.replace('/(tabs)');
+			router.replace('/(tabs)' as any);
 		} catch (e: any) {
 			Alert.alert(
 				Resources.Auth.Errors.Login_failed,

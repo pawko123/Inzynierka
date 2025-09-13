@@ -19,7 +19,7 @@ import { getStrings } from '@/i18n';
 
 interface ServerSidebarProps {
 	onServerSelect?: (server: Server) => void;
-	onDirectChannelSelect?: (channelId: string) => void;
+	onDirectChannelSelect?: (channel: DirectChannel) => void;
 	onAddServer?: () => void;
 	onCreateDirectMessage?: () => void;
 }
@@ -80,7 +80,11 @@ export default function ServerSidebar({
 	const handleDirectChannelPress = (channelId: string) => {
 		setSelectedChannelId(channelId);
 		setSelectedServerId(null);
-		onDirectChannelSelect?.(channelId);
+		// Find the full channel object to pass
+		const channel = directChannels.find(ch => ch.id === channelId);
+		if (channel) {
+			onDirectChannelSelect?.(channel);
+		}
 	};
 
 	if (loading) {
