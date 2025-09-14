@@ -48,24 +48,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 		}
 	}, [token, refreshCurrentUser]);
 
-	const signIn = React.useCallback(
-		async ({ email, password }: SignInParams) => {
-			const { data } = await api.post('/auth/login', { email, password });
-			await storage.setItem(TOKEN_KEY, data.token);
-			setToken(data.token);
-			setAuthToken(data.token);
-		},
-		[]
-	);
+	const signIn = React.useCallback(async ({ email, password }: SignInParams) => {
+		const { data } = await api.post('/auth/login', { email, password });
+		await storage.setItem(TOKEN_KEY, data.token);
+		setToken(data.token);
+		setAuthToken(data.token);
+	}, []);
 
 	const register = React.useCallback(
 		async ({ username, email, password, repeatPassword }: SignUpParams) => {
 			console.log('Register request:', { username, email, password, repeatPassword });
-const response = await api.post('/auth/register', { username, email, password, repeatPassword });
-console.log('Register response:', response);
+			const response = await api.post('/auth/register', {
+				username,
+				email,
+				password,
+				repeatPassword,
+			});
+			console.log('Register response:', response);
 			await signIn({ email, password });
 		},
-		[signIn]
+		[signIn],
 	);
 
 	const signOut = async () => {

@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-	View,
-	Text,
-	StyleSheet,
-	FlatList,
-	TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
@@ -33,9 +27,7 @@ export default function ChannelSection({
 						{item.type === 'voice' ? '🔊' : '#'}
 					</Text>
 				</View>
-				<Text style={[styles.channelName, { color: colors.text }]}>
-					{item.name}
-				</Text>
+				<Text style={[styles.channelName, { color: colors.text }]}>{item.name}</Text>
 			</TouchableOpacity>
 		);
 	};
@@ -51,15 +43,12 @@ export default function ChannelSection({
 	return (
 		<View style={styles.channelSection}>
 			<View style={styles.sectionHeader}>
-				<Text style={[styles.sectionTitle, { color: colors.tabIconDefault }]}>
-					{title}
-				</Text>
+				<Text style={[styles.sectionTitle, { color: colors.tabIconDefault }]}>{title}</Text>
 				{canManageServer && (
-					<TouchableOpacity
-						style={styles.addChannelButton}
-						onPress={onAddChannel}
-					>
-						<Text style={[styles.addChannelButtonText, { color: colors.tabIconDefault }]}>
+					<TouchableOpacity style={styles.addChannelButton} onPress={onAddChannel}>
+						<Text
+							style={[styles.addChannelButtonText, { color: colors.tabIconDefault }]}
+						>
 							+
 						</Text>
 					</TouchableOpacity>

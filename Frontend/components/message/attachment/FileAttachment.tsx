@@ -1,22 +1,16 @@
 import React, { useState } from 'react';
-import {
-	View,
-	Text,
-	StyleSheet,
-	TouchableOpacity,
-	Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { FileService } from '@/services/FileService';
 import { FileAttachmentProps } from '@/types/message';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-export default function FileAttachment({ 
-	attachment, 
-	serverId, 
-	channelId, 
-	colors 
+export default function FileAttachment({
+	attachment,
+	serverId,
+	channelId,
+	colors,
 }: FileAttachmentProps) {
 	const [downloading, setDownloading] = useState(false);
 	const { token } = useAuth();
@@ -36,7 +30,7 @@ export default function FileAttachment({
 		}
 
 		setDownloading(true);
-		
+
 		try {
 			await FileService.downloadAndOpenFile({
 				attachment,
@@ -97,9 +91,7 @@ export default function FileAttachment({
 					{formatFileSize(attachment.size)} • {attachment.fileType}
 				</Text>
 			</View>
-			<Text style={styles.downloadText}>
-				{downloading ? 'Downloading...' : 'Download'}
-			</Text>
+			<Text style={styles.downloadText}>{downloading ? 'Downloading...' : 'Download'}</Text>
 		</TouchableOpacity>
 	);
 }

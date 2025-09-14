@@ -21,11 +21,11 @@ interface ImageViewerModalProps {
 	onClose: () => void;
 }
 
-export default function ImageViewerModal({ 
-	visible, 
-	imageUrl, 
-	fileName, 
-	onClose 
+export default function ImageViewerModal({
+	visible,
+	imageUrl,
+	fileName,
+	onClose,
 }: ImageViewerModalProps) {
 	const styles = StyleSheet.create({
 		modalContainer: {
@@ -103,16 +103,8 @@ export default function ImageViewerModal({
 				</View>
 
 				{/* Image */}
-				<TouchableOpacity 
-					style={styles.imageContainer} 
-					onPress={onClose}
-					activeOpacity={1}
-				>
-					<Image
-						source={{ uri: imageUrl }}
-						style={styles.image}
-						resizeMode="contain"
-					/>
+				<TouchableOpacity style={styles.imageContainer} onPress={onClose} activeOpacity={1}>
+					<Image source={{ uri: imageUrl }} style={styles.image} resizeMode="contain" />
 				</TouchableOpacity>
 			</SafeAreaView>
 		</Modal>

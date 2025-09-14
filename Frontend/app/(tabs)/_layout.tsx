@@ -13,13 +13,13 @@ import type { Server, DirectChannel } from '@/types/sidebar';
 function GuardedTabs({ children }: { children: React.ReactNode }) {
 	const { token, loading } = useAuth();
 	const router = useRouter();
-	
+
 	useEffect(() => {
 		if (!loading && !token) {
 			router.replace('/(auth)/login');
 		}
 	}, [token, loading, router]);
-	
+
 	if (loading) return null;
 	if (!token) return null; // Will redirect via useEffect
 	return <>{children}</>;
@@ -90,7 +90,9 @@ export default function TabLayout() {
 		// For joined servers, we need to fetch the full server data and add it
 		if (sidebarRef.current && data?.serverId) {
 			try {
-				const { data: serverData } = await api.get(`/server/getServer?serverId=${data.serverId}`);
+				const { data: serverData } = await api.get(
+					`/server/getServer?serverId=${data.serverId}`,
+				);
 				sidebarRef.current.addServer(serverData);
 			} catch (error) {
 				console.error('Failed to fetch joined server data:', error);
@@ -103,7 +105,7 @@ export default function TabLayout() {
 	return (
 		<GuardedTabs>
 			<View style={styles.container}>
-				<ServerSidebar 
+				<ServerSidebar
 					ref={sidebarRef}
 					onServerSelect={handleServerSelect}
 					onDirectChannelSelect={handleDirectChannelSelect}
@@ -113,7 +115,7 @@ export default function TabLayout() {
 				/>
 				<View style={styles.mainContent}>
 					{selectedServerId ? (
-						<ServerContent 
+						<ServerContent
 							serverId={selectedServerId}
 							serverName={selectedServerName}
 							onChannelSelect={handleChannelSelect}
@@ -129,7 +131,7 @@ export default function TabLayout() {
 							serverId="" // Direct channels don't have a server
 						/>
 					) : (
-						<WelcomeScreen 
+						<WelcomeScreen
 							onCreateServer={handleCreateServer}
 							onCreateDirectChannel={handleCreateDirectChannel}
 							onJoinServer={handleJoinServer}

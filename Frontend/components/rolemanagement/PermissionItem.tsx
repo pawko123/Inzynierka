@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, Switch } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
-import { Permission } from '@/utils/permissions';
 import { PermissionItemProps } from '@/types/roles';
 
 export default function PermissionItem({

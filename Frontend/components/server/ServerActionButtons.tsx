@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
-import {
-	View,
-	Text,
-	StyleSheet,
-	TouchableOpacity,
-	Alert,
-	Modal,
-	Clipboard,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Modal, Clipboard } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
@@ -40,12 +32,14 @@ export default function ServerActionButtons({
 			const { data } = await api.post('/invite/create', {
 				serverId: serverId,
 			});
-			
+
 			setGeneratedInvite(data.inviteCode);
 			setInviteModalVisible(true);
 		} catch (error: any) {
 			console.error('Error creating invite:', error);
-			const errorMessage = error.response?.data?.error || Resources.ServerManagement.Errors.Create_Invite_Failed;
+			const errorMessage =
+				error.response?.data?.error ||
+				Resources.ServerManagement.Errors.Create_Invite_Failed;
 			Alert.alert(Resources.CreateChannel.Error, errorMessage);
 		} finally {
 			setIsCreatingInvite(false);
@@ -71,9 +65,7 @@ export default function ServerActionButtons({
 						onPress={handleCreateInvite}
 						disabled={isCreatingInvite}
 					>
-						<Text style={[styles.buttonIcon, { color: colors.background }]}>
-							🔗
-						</Text>
+						<Text style={[styles.buttonIcon, { color: colors.background }]}>🔗</Text>
 					</TouchableOpacity>
 				)}
 
@@ -82,9 +74,7 @@ export default function ServerActionButtons({
 						style={[styles.actionButton, { backgroundColor: colors.tint }]}
 						onPress={onManageRoles}
 					>
-						<Text style={[styles.buttonIcon, { color: colors.background }]}>
-							👥
-						</Text>
+						<Text style={[styles.buttonIcon, { color: colors.background }]}>👥</Text>
 					</TouchableOpacity>
 				)}
 			</View>
@@ -101,32 +91,47 @@ export default function ServerActionButtons({
 						<Text style={[styles.modalTitle, { color: colors.text }]}>
 							{Resources.ServerManagement.Invite_Created}
 						</Text>
-						
-						<View style={[styles.inviteCodeContainer, { backgroundColor: colors.tabIconDefault + '20', borderColor: colors.border }]}>
+
+						<View
+							style={[
+								styles.inviteCodeContainer,
+								{
+									backgroundColor: colors.tabIconDefault + '20',
+									borderColor: colors.border,
+								},
+							]}
+						>
 							<Text style={[styles.inviteCode, { color: colors.text }]}>
 								{generatedInvite}
 							</Text>
 						</View>
-						
+
 						<Text style={[styles.inviteInfo, { color: colors.tabIconDefault }]}>
 							{Resources.ServerManagement.Invite_Info}
 						</Text>
-						
+
 						<View style={styles.modalButtons}>
 							<TouchableOpacity
 								style={[styles.modalButton, { backgroundColor: colors.tint }]}
 								onPress={handleCopyInvite}
 							>
-								<Text style={[styles.modalButtonText, { color: colors.background }]}>
+								<Text
+									style={[styles.modalButtonText, { color: colors.background }]}
+								>
 									{Resources.ServerManagement.Copy_Invite}
 								</Text>
 							</TouchableOpacity>
-							
+
 							<TouchableOpacity
-								style={[styles.modalButton, { backgroundColor: colors.tabIconDefault }]}
+								style={[
+									styles.modalButton,
+									{ backgroundColor: colors.tabIconDefault },
+								]}
 								onPress={() => setInviteModalVisible(false)}
 							>
-								<Text style={[styles.modalButtonText, { color: colors.background }]}>
+								<Text
+									style={[styles.modalButtonText, { color: colors.background }]}
+								>
 									{Resources.CreateChannel.Cancel}
 								</Text>
 							</TouchableOpacity>

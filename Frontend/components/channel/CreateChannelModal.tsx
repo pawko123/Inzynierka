@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
-import {
-	View,
-	Text,
-	TextInput,
-	Modal,
-	StyleSheet,
-	Alert,
-	TouchableOpacity,
-} from 'react-native';
+import { View, Text, TextInput, Modal, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { Button } from '@/components/ui';
@@ -19,7 +11,12 @@ import { CreateChannelModalProps } from '@/types/ui';
 
 export type ChannelType = 'text' | 'voice';
 
-export default function CreateChannelModal({ visible, onClose, serverId, onChannelCreated }: CreateChannelModalProps) {
+export default function CreateChannelModal({
+	visible,
+	onClose,
+	serverId,
+	onChannelCreated,
+}: CreateChannelModalProps) {
 	const colorScheme = useColorScheme();
 	const colors = Colors[colorScheme ?? 'light'];
 	const Resources = getStrings();
@@ -36,7 +33,10 @@ export default function CreateChannelModal({ visible, onClose, serverId, onChann
 		}
 
 		if (!channelName.trim()) {
-			Alert.alert(Resources.CreateChannel.Error, Resources.CreateChannel.Channel_Name_Required);
+			Alert.alert(
+				Resources.CreateChannel.Error,
+				Resources.CreateChannel.Channel_Name_Required,
+			);
 			return;
 		}
 
@@ -55,7 +55,8 @@ export default function CreateChannelModal({ visible, onClose, serverId, onChann
 			setChannelName(''); // Clear the input
 		} catch (error: any) {
 			console.error('Error creating channel:', error);
-			const backendErrorMessage = error.response?.data?.error || Resources.CreateChannel.Errors.Generic;
+			const backendErrorMessage =
+				error.response?.data?.error || Resources.CreateChannel.Errors.Generic;
 			const localizedErrorMessage = translateError(backendErrorMessage);
 			Alert.alert(Resources.CreateChannel.Error, localizedErrorMessage);
 		} finally {
@@ -137,7 +138,7 @@ export default function CreateChannelModal({ visible, onClose, serverId, onChann
 						/>
 						<Button
 							title={
-								isLoading 
+								isLoading
 									? Resources.CreateChannel.Creating
 									: Resources.CreateChannel.Create_Channel
 							}

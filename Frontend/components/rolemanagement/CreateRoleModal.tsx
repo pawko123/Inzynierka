@@ -1,29 +1,29 @@
 import React, { useState } from 'react';
-import {
-	View,
-	Text,
-	StyleSheet,
-	Modal,
-	TextInput,
-	TouchableOpacity,
-	Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
 import { CreateRoleModalProps } from '@/types/roles';
 
 const predefinedColors = [
-	'#FF5733', '#33FF57', '#3357FF', '#FF33F1', '#F1FF33',
-	'#33FFF1', '#FF8C33', '#8C33FF', '#33FF8C', '#FF3333',
-	'#9333FF', '#33FF93', '#FF3393', '#93FF33', '#3393FF',
+	'#FF5733',
+	'#33FF57',
+	'#3357FF',
+	'#FF33F1',
+	'#F1FF33',
+	'#33FFF1',
+	'#FF8C33',
+	'#8C33FF',
+	'#33FF8C',
+	'#FF3333',
+	'#9333FF',
+	'#33FF93',
+	'#FF3393',
+	'#93FF33',
+	'#3393FF',
 ];
 
-export default function CreateRoleModal({
-	visible,
-	onClose,
-	onCreateRole,
-}: CreateRoleModalProps) {
+export default function CreateRoleModal({ visible, onClose, onCreateRole }: CreateRoleModalProps) {
 	const colorScheme = useColorScheme();
 	const colors = Colors[colorScheme ?? 'light'];
 	const Resources = getStrings();
@@ -41,7 +41,7 @@ export default function CreateRoleModal({
 		try {
 			setIsCreating(true);
 			await onCreateRole(roleName.trim(), selectedColor);
-			
+
 			// Reset form
 			setRoleName('');
 			setSelectedColor(predefinedColors[0]);
@@ -61,12 +61,7 @@ export default function CreateRoleModal({
 	};
 
 	return (
-		<Modal
-			visible={visible}
-			transparent
-			animationType="fade"
-			onRequestClose={handleClose}
-		>
+		<Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
 			<View style={styles.overlay}>
 				<View style={[styles.modal, { backgroundColor: colors.card }]}>
 					<View style={[styles.header, { borderBottomColor: colors.border }]}>
@@ -130,9 +125,22 @@ export default function CreateRoleModal({
 						{/* Preview */}
 						<View style={styles.section}>
 							<Text style={[styles.label, { color: colors.text }]}>Preview</Text>
-							<View style={[styles.preview, { backgroundColor: colors.background, borderColor: colors.border }]}>
+							<View
+								style={[
+									styles.preview,
+									{
+										backgroundColor: colors.background,
+										borderColor: colors.border,
+									},
+								]}
+							>
 								<View style={[styles.rolePreview, { borderColor: colors.border }]}>
-									<View style={[styles.colorIndicator, { backgroundColor: selectedColor }]} />
+									<View
+										style={[
+											styles.colorIndicator,
+											{ backgroundColor: selectedColor },
+										]}
+									/>
 									<Text style={[styles.previewText, { color: colors.text }]}>
 										{roleName || 'Role Name'}
 									</Text>
@@ -143,7 +151,11 @@ export default function CreateRoleModal({
 
 					<View style={[styles.footer, { borderTopColor: colors.border }]}>
 						<TouchableOpacity
-							style={[styles.button, styles.cancelButton, { borderColor: colors.border }]}
+							style={[
+								styles.button,
+								styles.cancelButton,
+								{ borderColor: colors.border },
+							]}
 							onPress={handleClose}
 							disabled={isCreating}
 						>
@@ -162,7 +174,9 @@ export default function CreateRoleModal({
 							disabled={isCreating || !roleName.trim()}
 						>
 							<Text style={[styles.buttonText, { color: colors.background }]}>
-								{isCreating ? Resources.ServerManagement.Creating : Resources.ServerManagement.Create}
+								{isCreating
+									? Resources.ServerManagement.Creating
+									: Resources.ServerManagement.Create}
 							</Text>
 						</TouchableOpacity>
 					</View>

@@ -131,9 +131,11 @@ class WebSocketService {
 		if (this.reconnectAttempts < this.maxReconnectAttempts) {
 			this.reconnectAttempts++;
 			const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-			
+
 			setTimeout(() => {
-				console.log(`Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+				console.log(
+					`Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`,
+				);
 				this.connect();
 			}, delay);
 		}
@@ -178,7 +180,7 @@ class WebSocketService {
 		if (!this.eventListeners[event]) return;
 
 		if (callback) {
-			this.eventListeners[event] = this.eventListeners[event].filter(cb => cb !== callback);
+			this.eventListeners[event] = this.eventListeners[event].filter((cb) => cb !== callback);
 		} else {
 			this.eventListeners[event] = [];
 		}
@@ -186,7 +188,7 @@ class WebSocketService {
 
 	private emit(event: string, ...args: any[]) {
 		if (this.eventListeners[event]) {
-			this.eventListeners[event].forEach(callback => {
+			this.eventListeners[event].forEach((callback) => {
 				try {
 					callback(...args);
 				} catch (error) {

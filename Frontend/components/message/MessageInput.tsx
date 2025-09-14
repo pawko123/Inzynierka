@@ -25,22 +25,22 @@ export default function MessageInput({
 	const [message, setMessage] = useState('');
 	const [attachments, setAttachments] = useState<any[]>([]);
 	const { currentUser } = useAuth();
-	
+
 	// Typing indicator management
 	const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const isTypingRef = useRef(false);
-	
+
 	const handleTypingStart = useCallback(() => {
 		if (!isTypingRef.current && currentUser) {
 			isTypingRef.current = true;
 			webSocketService.startTyping(channelId, currentUser.username);
 		}
-		
+
 		// Clear existing timeout
 		if (typingTimeoutRef.current) {
 			clearTimeout(typingTimeoutRef.current);
 		}
-		
+
 		// Set new timeout to stop typing after 3 seconds of inactivity
 		typingTimeoutRef.current = setTimeout(() => {
 			if (isTypingRef.current) {
@@ -49,7 +49,7 @@ export default function MessageInput({
 			}
 		}, 3000);
 	}, [channelId, currentUser]);
-	
+
 	const handleTypingStop = useCallback(() => {
 		if (typingTimeoutRef.current) {
 			clearTimeout(typingTimeoutRef.current);
@@ -59,10 +59,10 @@ export default function MessageInput({
 			webSocketService.stopTyping(channelId);
 		}
 	}, [channelId]);
-	
+
 	const handleTextChange = (text: string) => {
 		setMessage(text);
-		
+
 		if (text.trim().length > 0) {
 			handleTypingStart();
 		} else {
@@ -72,10 +72,10 @@ export default function MessageInput({
 
 	const handleSend = () => {
 		if ((!message.trim() && attachments.length === 0) || disabled) return;
-		
+
 		// Stop typing indicator before sending
 		handleTypingStop();
-		
+
 		onSendMessage(message, attachments);
 		setMessage('');
 		setAttachments([]);
@@ -88,7 +88,7 @@ export default function MessageInput({
 			input.type = 'file';
 			input.multiple = true;
 			input.accept = 'image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx';
-			
+
 			input.onchange = (e: any) => {
 				const files = Array.from(e.target.files || []);
 				if (files.length > 0) {
@@ -98,23 +98,23 @@ export default function MessageInput({
 						size: file.size,
 						type: file.type,
 					}));
-					setAttachments(prev => [...prev, ...newAttachments]);
+					setAttachments((prev) => [...prev, ...newAttachments]);
 				}
 			};
-			
+
 			input.click();
 		} else {
 			// For mobile, show placeholder message
 			Alert.alert(
 				getStrings().Chat.File_Attachment,
 				getStrings().Chat.File_Feature_Coming_Soon,
-				[{ text: getStrings().Chat.OK }]
+				[{ text: getStrings().Chat.OK }],
 			);
 		}
 	};
 
 	const removeAttachment = (index: number) => {
-		setAttachments(prev => prev.filter((_, i) => i !== index));
+		setAttachments((prev) => prev.filter((_, i) => i !== index));
 	};
 
 	const formatFileSize = (bytes: number) => {
@@ -126,24 +126,38 @@ export default function MessageInput({
 	};
 
 	return (
-		<View style={[styles.container, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
+		<View
+			style={[
+				styles.container,
+				{ backgroundColor: colors.background, borderTopColor: colors.border },
+			]}
+		>
 			{/* Attachments Preview */}
 			{attachments.length > 0 && (
-				<ScrollView 
-					horizontal 
+				<ScrollView
+					horizontal
 					style={styles.attachmentsPreview}
 					showsHorizontalScrollIndicator={false}
 				>
 					{attachments.map((attachment, index) => (
-						<View key={index} style={[styles.attachmentItem, { backgroundColor: colors.card }]}>
-							<Text style={[styles.attachmentName, { color: colors.text }]} numberOfLines={1}>
+						<View
+							key={index}
+							style={[styles.attachmentItem, { backgroundColor: colors.card }]}
+						>
+							<Text
+								style={[styles.attachmentName, { color: colors.text }]}
+								numberOfLines={1}
+							>
 								{attachment.name}
 							</Text>
 							<Text style={[styles.attachmentSize, { color: colors.tabIconDefault }]}>
 								{formatFileSize(attachment.size)}
 							</Text>
-							<TouchableOpacity 
-								style={[styles.removeButton, { backgroundColor: colors.destructive }]}
+							<TouchableOpacity
+								style={[
+									styles.removeButton,
+									{ backgroundColor: colors.destructive },
+								]}
 								onPress={() => removeAttachment(index)}
 							>
 								<Text style={styles.removeButtonText}>×</Text>
@@ -160,21 +174,17 @@ export default function MessageInput({
 					onPress={pickDocument}
 					disabled={disabled}
 				>
-					<Ionicons 
-						name="add-circle-outline" 
-						size={24} 
-						color={colors.tint}
-					/>
+					<Ionicons name="add-circle-outline" size={24} color={colors.tint} />
 				</TouchableOpacity>
 
 				<TextInput
 					style={[
 						styles.textInput,
-						{ 
+						{
 							backgroundColor: colors.inputBackground || colors.card,
 							color: colors.text,
 							borderColor: colors.border,
-						}
+						},
 					]}
 					value={message}
 					onChangeText={handleTextChange}
@@ -190,20 +200,22 @@ export default function MessageInput({
 					style={[
 						styles.sendButton,
 						{
-							backgroundColor: (message.trim() || attachments.length > 0) && !disabled
-								? colors.tint
-								: colors.tabIconDefault,
-						}
+							backgroundColor:
+								(message.trim() || attachments.length > 0) && !disabled
+									? colors.tint
+									: colors.tabIconDefault,
+						},
 					]}
 					onPress={handleSend}
 					disabled={(!message.trim() && attachments.length === 0) || disabled}
 				>
-					<Ionicons 
-						name="send-sharp" 
-						size={20} 
-						color={(message.trim() || attachments.length > 0) && !disabled
-							? colors.background
-							: colors.text
+					<Ionicons
+						name="send-sharp"
+						size={20}
+						color={
+							(message.trim() || attachments.length > 0) && !disabled
+								? colors.background
+								: colors.text
 						}
 					/>
 				</TouchableOpacity>

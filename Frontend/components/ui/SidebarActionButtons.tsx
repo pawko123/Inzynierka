@@ -5,7 +5,11 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { SidebarActionsProps } from '@/types';
 
-export default function SidebarActionButtons({ onAddServer, onCreateDirectMessage, onJoinServer }: SidebarActionsProps) {
+export default function SidebarActionButtons({
+	onAddServer,
+	onCreateDirectMessage,
+	onJoinServer,
+}: SidebarActionsProps) {
 	const colorScheme = useColorScheme();
 	const colors = Colors[colorScheme ?? 'light'];
 
@@ -40,7 +44,7 @@ export default function SidebarActionButtons({ onAddServer, onCreateDirectMessag
 					isCircular={true}
 					icon={<PlusIcon />}
 				/>
-				
+
 				{/* Create Direct Message Button */}
 				<Button
 					onPress={onCreateDirectMessage || (() => console.log('Create DM'))}
@@ -50,7 +54,7 @@ export default function SidebarActionButtons({ onAddServer, onCreateDirectMessag
 					icon={<MessageIcon />}
 				/>
 			</View>
-			
+
 			{/* Join Server Button - below create buttons */}
 			<Button
 				onPress={onJoinServer || (() => console.log('Join server'))}

@@ -1,25 +1,18 @@
 import React, { useState, useRef } from 'react';
-import {
-	View,
-	Text,
-	StyleSheet,
-	TouchableOpacity,
-	TextInput,
-	Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Dimensions } from 'react-native';
 import { getStrings } from '@/i18n';
 import { MessageItemProps } from '@/types/message';
 import MessageAttachment from './attachment/MessageAttachment';
 import { MessageService } from '@/services/MessageService';
 
-export default function MessageItem({ 
-	message, 
-	serverId, 
-	colors, 
-	onDeleteMessage, 
+export default function MessageItem({
+	message,
+	serverId,
+	colors,
+	onDeleteMessage,
 	onEditMessage,
 	canEdit = false,
-	canDelete = false 
+	canDelete = false,
 }: MessageItemProps) {
 	const Resources = getStrings();
 	const [isEditing, setIsEditing] = useState(false);
@@ -34,7 +27,7 @@ export default function MessageItem({
 			if (isNaN(messageDate.getTime())) {
 				return 'Invalid Date';
 			}
-			
+
 			const now = new Date();
 			const diffTime = now.getTime() - messageDate.getTime();
 			const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -47,10 +40,10 @@ export default function MessageItem({
 				return `Yesterday ${messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 			} else if (diffDays < 7) {
 				// This week - show day and time
-				return messageDate.toLocaleDateString([], { 
-					weekday: 'short', 
-					hour: '2-digit', 
-					minute: '2-digit' 
+				return messageDate.toLocaleDateString([], {
+					weekday: 'short',
+					hour: '2-digit',
+					minute: '2-digit',
 				});
 			} else {
 				// Older - show date and time
@@ -112,7 +105,7 @@ export default function MessageItem({
 				const screenHeight = Dimensions.get('window').height;
 				const dropdownHeight = 120; // Approximate dropdown height
 				const spaceBelow = screenHeight - (y + height);
-				
+
 				if (spaceBelow < dropdownHeight && y > dropdownHeight) {
 					setDropdownPosition('above');
 				} else {
@@ -135,46 +128,68 @@ export default function MessageItem({
 				{/* Dropdown menu button */}
 				{(canEdit || canDelete) && (
 					<View style={styles.dropdownContainer} ref={dropdownRef}>
-						<TouchableOpacity 
-							onPress={handleDropdownToggle} 
+						<TouchableOpacity
+							onPress={handleDropdownToggle}
 							style={[styles.menuButton, { backgroundColor: colors.card }]}
 						>
 							<Text style={[styles.menuButtonText, { color: colors.text }]}>⋯</Text>
 						</TouchableOpacity>
 						{showDropdown && (
 							<>
-								<TouchableOpacity 
-									style={styles.dropdownOverlay} 
+								<TouchableOpacity
+									style={styles.dropdownOverlay}
 									onPress={() => setShowDropdown(false)}
 									activeOpacity={1}
 								/>
-								<View style={[
-									styles.dropdown, 
-									dropdownPosition === 'above' ? styles.dropdownAbove : styles.dropdownBelow,
-									{ backgroundColor: colors.card, borderColor: colors.border }
-								]}>
+								<View
+									style={[
+										styles.dropdown,
+										dropdownPosition === 'above'
+											? styles.dropdownAbove
+											: styles.dropdownBelow,
+										{
+											backgroundColor: colors.card,
+											borderColor: colors.border,
+										},
+									]}
+								>
 									{canEdit && (
 										<TouchableOpacity
 											onPress={() => {
 												handleEdit();
 												setShowDropdown(false);
-											}} 
+											}}
 											style={styles.dropdownItem}
 										>
-											<Text style={[styles.dropdownItemText, { color: colors.text }]}>
+											<Text
+												style={[
+													styles.dropdownItemText,
+													{ color: colors.text },
+												]}
+											>
 												{Resources.Chat.Edit_Message}
 											</Text>
 										</TouchableOpacity>
 									)}
 									{canEdit && canDelete && (
-										<View style={[styles.dropdownSeparator, { borderColor: colors.border }]} />
+										<View
+											style={[
+												styles.dropdownSeparator,
+												{ borderColor: colors.border },
+											]}
+										/>
 									)}
 									{canDelete && (
-										<TouchableOpacity 
-											onPress={handleDelete} 
+										<TouchableOpacity
+											onPress={handleDelete}
 											style={styles.dropdownItem}
 										>
-											<Text style={[styles.dropdownItemText, { color: colors.destructive }]}>
+											<Text
+												style={[
+													styles.dropdownItemText,
+													{ color: colors.destructive },
+												]}
+											>
 												{Resources.Chat.Delete_Message}
 											</Text>
 										</TouchableOpacity>
@@ -185,11 +200,14 @@ export default function MessageItem({
 					</View>
 				)}
 			</View>
-			
+
 			{isEditing ? (
 				<View style={styles.editContainer}>
 					<TextInput
-						style={[styles.editInput, { color: colors.text, borderColor: colors.border }]}
+						style={[
+							styles.editInput,
+							{ color: colors.text, borderColor: colors.border },
+						]}
 						value={editContent}
 						onChangeText={setEditContent}
 						multiline
@@ -197,26 +215,24 @@ export default function MessageItem({
 						placeholderTextColor={colors.tabIconDefault}
 					/>
 					<View style={styles.editButtons}>
-						<TouchableOpacity 
-							onPress={handleCancelEdit} 
+						<TouchableOpacity
+							onPress={handleCancelEdit}
 							style={[styles.editButton, { backgroundColor: colors.tabIconDefault }]}
 						>
-							<Text style={styles.editButtonText}>
-								{Resources.Chat.Cancel}
-							</Text>
+							<Text style={styles.editButtonText}>{Resources.Chat.Cancel}</Text>
 						</TouchableOpacity>
-						<TouchableOpacity 
-							onPress={handleSaveEdit} 
+						<TouchableOpacity
+							onPress={handleSaveEdit}
 							style={[styles.editButton, { backgroundColor: colors.tint }]}
 						>
-							<Text style={styles.editButtonText}>
-								{Resources.Chat.Save}
-							</Text>
+							<Text style={styles.editButtonText}>{Resources.Chat.Save}</Text>
 						</TouchableOpacity>
 					</View>
 				</View>
 			) : (
-				message.content && typeof message.content === 'string' && message.content.trim() && (
+				message.content &&
+				typeof message.content === 'string' &&
+				message.content.trim() && (
 					<Text style={[styles.messageContent, { color: colors.text }]}>
 						{message.content.toString().trim()}
 					</Text>

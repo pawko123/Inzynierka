@@ -9,12 +9,12 @@ interface WebAudioPlayerProps {
 }
 
 const { width: screenWidth } = Dimensions.get('window');
-	
-export default function WebAudioPlayer({ 
-	audioUrl, 
-	fileType, 
+
+export default function WebAudioPlayer({
+	audioUrl,
+	fileType,
 	onError,
-	colors
+	colors,
 }: WebAudioPlayerProps) {
 	const styles = StyleSheet.create({
 		webAudio: {
@@ -22,7 +22,7 @@ export default function WebAudioPlayer({
 			maxWidth: '100%',
 			backgroundColor: colors.background,
 			width: Math.min(screenWidth * 0.8, 400),
-		}
+		},
 	});
 
 	return (

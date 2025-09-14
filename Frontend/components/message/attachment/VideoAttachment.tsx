@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-	View,
-	Text,
-	StyleSheet,
-	TouchableOpacity,
-	Dimensions,
-	Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { VideoAttachmentProps } from '@/types/message';
 import VideoViewerModal from './VideoViewerModal';
@@ -15,11 +8,11 @@ import { getStrings } from '@/i18n';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-export default function VideoAttachment({ 
-	attachment, 
-	serverId, 
-	channelId, 
-	colors 
+export default function VideoAttachment({
+	attachment,
+	serverId,
+	channelId,
+	colors,
 }: VideoAttachmentProps) {
 	const { token } = useAuth();
 	const [videoError, setVideoError] = useState(false);
@@ -34,13 +27,13 @@ export default function VideoAttachment({
 					if (serverId && serverId.trim() !== '') {
 						params.append('serverId', serverId);
 					}
-					
+
 					const response = await api.get(`${attachment.url}?${params.toString()}`, {
-						responseType: 'blob'
+						responseType: 'blob',
 					});
-					
+
 					const blob = response.data;
-					
+
 					if (Platform.OS === 'web') {
 						// For web, create a blob URL
 						const blobUrl = window.URL.createObjectURL(blob);
@@ -54,7 +47,6 @@ export default function VideoAttachment({
 						};
 						reader.readAsDataURL(blob);
 					}
-					
 				} catch (error) {
 					console.error('Error loading video URL:', error);
 					setVideoError(true);
@@ -182,7 +174,7 @@ export default function VideoAttachment({
 						{attachment.fileName} • {formatFileSize(attachment.size)}
 					</Text>
 				</View>
-				
+
 				<VideoViewerModal
 					visible={showVideoModal}
 					videoUrl={videoUrl}
@@ -198,11 +190,7 @@ export default function VideoAttachment({
 		// Show error state
 		return (
 			<React.Fragment>
-				<TouchableOpacity
-					style={styles.videoContainer}
-					onPress={openVideo}
-					disabled={true}
-				>
+				<TouchableOpacity style={styles.videoContainer} onPress={openVideo} disabled={true}>
 					<View style={[styles.videoPlaceholder, { borderColor: colors.border }]}>
 						<Text style={[styles.videoIcon, { color: colors.text }]}>🎥</Text>
 						<Text style={[styles.videoText, { color: colors.text }]}>
@@ -213,7 +201,7 @@ export default function VideoAttachment({
 						{attachment.fileName} • {formatFileSize(attachment.size)}
 					</Text>
 				</TouchableOpacity>
-				
+
 				<VideoViewerModal
 					visible={showVideoModal}
 					videoUrl={videoUrl}
@@ -227,10 +215,7 @@ export default function VideoAttachment({
 	// For mobile with valid video URL, show clickable placeholder
 	return (
 		<React.Fragment>
-			<TouchableOpacity
-				style={styles.videoContainer}
-				onPress={openVideo}
-			>
+			<TouchableOpacity style={styles.videoContainer} onPress={openVideo}>
 				<View style={[styles.videoPlaceholder, { borderColor: colors.border }]}>
 					<Text style={[styles.videoIcon, { color: colors.text }]}>🎥</Text>
 					<Text style={[styles.videoText, { color: colors.text }]}>
@@ -244,7 +229,7 @@ export default function VideoAttachment({
 					{attachment.fileName} • {formatFileSize(attachment.size)}
 				</Text>
 			</TouchableOpacity>
-			
+
 			<VideoViewerModal
 				visible={showVideoModal}
 				videoUrl={videoUrl}

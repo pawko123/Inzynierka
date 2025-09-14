@@ -22,11 +22,11 @@ interface VideoViewerModalProps {
 	onClose: () => void;
 }
 
-export default function VideoViewerModal({ 
-	visible, 
-	videoUrl, 
-	fileName, 
-	onClose 
+export default function VideoViewerModal({
+	visible,
+	videoUrl,
+	fileName,
+	onClose,
 }: VideoViewerModalProps) {
 	const video = useRef<Video>(null);
 	const [status, setStatus] = useState<any>({});
@@ -73,7 +73,7 @@ export default function VideoViewerModal({
 		},
 		video: {
 			width: screenWidth - 40,
-			height: (screenWidth - 40) * 9 / 16, // 16:9 aspect ratio
+			height: ((screenWidth - 40) * 9) / 16, // 16:9 aspect ratio
 			maxHeight: screenHeight * 0.7,
 			borderRadius: 8,
 		},
@@ -143,8 +143,8 @@ export default function VideoViewerModal({
 				</View>
 
 				{/* Video Player */}
-				<TouchableOpacity 
-					style={styles.videoContainer} 
+				<TouchableOpacity
+					style={styles.videoContainer}
 					onPress={handleModalClose}
 					activeOpacity={1}
 				>
@@ -166,14 +166,14 @@ export default function VideoViewerModal({
 				{/* Custom Controls for Android */}
 				{Platform.OS === 'android' && (
 					<View style={styles.controls}>
-						<TouchableOpacity 
+						<TouchableOpacity
 							style={[styles.controlButton, styles.playPauseButton]}
 							onPress={togglePlayPause}
 						>
-							<Ionicons 
-								name={status.isPlaying ? "pause" : "play"} 
-								size={24} 
-								color="white" 
+							<Ionicons
+								name={status.isPlaying ? 'pause' : 'play'}
+								size={24}
+								color="white"
 							/>
 						</TouchableOpacity>
 					</View>

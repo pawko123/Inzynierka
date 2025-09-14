@@ -1,21 +1,15 @@
 import React from 'react';
-import {
-	View,
-	Text,
-	StyleSheet,
-	TouchableOpacity,
-	FlatList,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
 import { Role, ServerRolesTabProps } from '@/types/roles';
 
-export default function ServerRolesTab({ 
-	roles, 
-	onCreateRole, 
-	onRoleSelect, 
-	onDeleteRole 
+export default function ServerRolesTab({
+	roles,
+	onCreateRole,
+	onRoleSelect,
+	onDeleteRole,
 }: ServerRolesTabProps) {
 	const colorScheme = useColorScheme();
 	const colors = Colors[colorScheme ?? 'light'];
@@ -24,9 +18,9 @@ export default function ServerRolesTab({
 	const renderRoleItem = ({ item }: { item: Role }) => (
 		<TouchableOpacity
 			style={[
-				styles.roleItem, 
+				styles.roleItem,
 				{ backgroundColor: colors.card, borderColor: colors.border },
-				item.isDefault && styles.disabledRoleItem
+				item.isDefault && styles.disabledRoleItem,
 			]}
 			onPress={() => !item.isDefault && onRoleSelect(item)}
 			disabled={item.isDefault}
@@ -61,10 +55,12 @@ export default function ServerRolesTab({
 					style={[styles.createButton, { backgroundColor: colors.tint }]}
 					onPress={onCreateRole}
 				>
-					<Text style={[
-						styles.createButtonText, 
-						{ color: colorScheme === 'dark' ? '#000000' : '#FFFFFF' }
-					]}>
+					<Text
+						style={[
+							styles.createButtonText,
+							{ color: colorScheme === 'dark' ? '#000000' : '#FFFFFF' },
+						]}
+					>
 						{Resources.ServerManagement.Create_Role}
 					</Text>
 				</TouchableOpacity>

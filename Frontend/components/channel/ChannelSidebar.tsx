@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-	View,
-	Text,
-	StyleSheet,
-	TouchableOpacity,
-	ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useResponsive } from '@/hooks/useResponsive';
 import { Colors } from '@/constants/Colors';
@@ -34,10 +28,12 @@ export default function ChannelSidebar({
 	const Resources = getStrings();
 
 	return (
-		<View style={[
-			isMobile ? styles.channelSidebarMobile : styles.channelSidebar, 
-			{ backgroundColor: colors.background, borderRightColor: colors.border }
-		]}>
+		<View
+			style={[
+				isMobile ? styles.channelSidebarMobile : styles.channelSidebar,
+				{ backgroundColor: colors.background, borderRightColor: colors.border },
+			]}
+		>
 			{/* Server Header */}
 			<View style={[styles.serverHeader, { borderBottomColor: colors.border }]}>
 				<Text style={[styles.serverName, { color: colors.text }]}>
@@ -60,16 +56,12 @@ export default function ChannelSidebar({
 				</View>
 			) : error ? (
 				<View style={styles.errorContainer}>
-					<Text style={[styles.errorText, { color: colors.text }]}>
-						{error}
-					</Text>
+					<Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
 					<TouchableOpacity
 						style={[styles.retryButton, { backgroundColor: colors.tint }]}
 						onPress={onRetry}
 					>
-						<Text style={styles.retryButtonText}>
-							{Resources.ServerContent.Retry}
-						</Text>
+						<Text style={styles.retryButtonText}>{Resources.ServerContent.Retry}</Text>
 					</TouchableOpacity>
 				</View>
 			) : (
@@ -77,7 +69,7 @@ export default function ChannelSidebar({
 					{/* Text Channels Section */}
 					<ChannelSection
 						title={Resources.ServerContent.Text_Channels}
-						channels={channels.filter(channel => channel.type !== 'voice')}
+						channels={channels.filter((channel) => channel.type !== 'voice')}
 						canManageServer={canManageServer}
 						onChannelPress={onChannelPress}
 						onAddChannel={onAddChannel}
@@ -86,7 +78,7 @@ export default function ChannelSidebar({
 					{/* Voice Channels Section */}
 					<ChannelSection
 						title={Resources.ServerContent.Voice_Channels}
-						channels={channels.filter(channel => channel.type === 'voice')}
+						channels={channels.filter((channel) => channel.type === 'voice')}
 						canManageServer={canManageServer}
 						onChannelPress={onChannelPress}
 						onAddChannel={onAddChannel}

@@ -4,13 +4,27 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { DirectChannelItemProps } from '@/types';
 
-export default function DirectChannelItem({ channel, isSelected, onPress }: DirectChannelItemProps) {
+export default function DirectChannelItem({
+	channel,
+	isSelected,
+	onPress,
+}: DirectChannelItemProps) {
 	const colorScheme = useColorScheme();
 
 	const getDirectChannelIcon = () => {
 		return (
-			<View style={[styles.directChannelIcon, { backgroundColor: Colors[colorScheme ?? 'light'].tabIconDefault }]}>
-				<Text style={[styles.directChannelIconText, { color: Colors[colorScheme ?? 'light'].background }]}>
+			<View
+				style={[
+					styles.directChannelIcon,
+					{ backgroundColor: Colors[colorScheme ?? 'light'].tabIconDefault },
+				]}
+			>
+				<Text
+					style={[
+						styles.directChannelIconText,
+						{ color: Colors[colorScheme ?? 'light'].background },
+					]}
+				>
 					{channel.name.charAt(0).toUpperCase()}
 				</Text>
 			</View>
@@ -29,7 +43,7 @@ export default function DirectChannelItem({ channel, isSelected, onPress }: Dire
 			activeOpacity={0.7}
 		>
 			{getDirectChannelIcon()}
-			<Text 
+			<Text
 				style={[styles.channelName, { color: Colors[colorScheme ?? 'light'].text }]}
 				numberOfLines={2}
 			>

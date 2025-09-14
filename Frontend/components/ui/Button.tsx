@@ -24,7 +24,7 @@ export default function Button({
 
 	const getButtonStyle = (): ViewStyle => {
 		const baseStyle = isCircular ? styles[`${size}Circular`] : styles[size];
-		
+
 		switch (variant) {
 			case 'primary':
 				return {
@@ -64,7 +64,7 @@ export default function Button({
 
 	const getTextStyle = (): TextStyle => {
 		const baseTextStyle = styles[`${size}Text` as keyof typeof styles] as TextStyle;
-		
+
 		switch (variant) {
 			case 'primary':
 				return {
@@ -93,11 +93,7 @@ export default function Button({
 			disabled={disabled}
 			activeOpacity={disabled ? 1 : activeOpacity}
 		>
-			{icon ? icon : (
-				title && <Text style={[getTextStyle(), textStyle]}>
-					{title}
-				</Text>
-			)}
+			{icon ? icon : title && <Text style={[getTextStyle(), textStyle]}>{title}</Text>}
 		</TouchableOpacity>
 	);
 }
@@ -122,7 +118,7 @@ const styles = StyleSheet.create({
 		borderRadius: 12,
 		alignItems: 'center',
 	},
-	
+
 	// Circular size variants
 	smallCircular: {
 		width: 32,
@@ -145,7 +141,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'center',
 	},
-	
+
 	// Text size variants
 	smallText: {
 		fontSize: 14,

@@ -1,37 +1,40 @@
 import React from 'react';
-import {
-	View,
-	Text,
-	StyleSheet,
-	TouchableOpacity,
-	FlatList,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
 import { ServerMember, ServerMembersTabProps } from '@/types/roles';
 
-export default function ServerMembersTab({ 
-	members, 
-	onMemberSelect 
-}: ServerMembersTabProps) {
+export default function ServerMembersTab({ members, onMemberSelect }: ServerMembersTabProps) {
 	const colorScheme = useColorScheme();
 	const colors = Colors[colorScheme ?? 'light'];
 	const Resources = getStrings();
 
 	const renderMemberItem = ({ item }: { item: ServerMember }) => (
-		<View style={[styles.memberItem, { backgroundColor: colors.card, borderColor: colors.border }]}>
+		<View
+			style={[
+				styles.memberItem,
+				{ backgroundColor: colors.card, borderColor: colors.border },
+			]}
+		>
 			<View style={styles.memberInfo}>
 				<Text style={[styles.memberName, { color: colors.text }]}>{item.memberName}</Text>
-				<Text style={[styles.memberUsername, { color: colors.tabIconDefault }]}>@{item.user?.username || item.username}</Text>
+				<Text style={[styles.memberUsername, { color: colors.tabIconDefault }]}>
+					@{item.user?.username || item.username}
+				</Text>
 			</View>
 			<View style={styles.memberRoles}>
 				{item.roles.map((role) => (
 					<View
 						key={role.id}
-						style={[styles.memberRoleTag, { backgroundColor: role.color + '20', borderColor: role.color }]}
+						style={[
+							styles.memberRoleTag,
+							{ backgroundColor: role.color + '20', borderColor: role.color },
+						]}
 					>
-						<Text style={[styles.memberRoleText, { color: role.color }]}>{role.name}</Text>
+						<Text style={[styles.memberRoleText, { color: role.color }]}>
+							{role.name}
+						</Text>
 					</View>
 				))}
 			</View>

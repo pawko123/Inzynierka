@@ -5,11 +5,11 @@ import VideoAttachment from './VideoAttachment';
 import AudioAttachment from './AudioAttachment';
 import FileAttachment from './FileAttachment';
 
-export default function MessageAttachment({ 
-	attachment, 
-	serverId, 
-	channelId, 
-	colors 
+export default function MessageAttachment({
+	attachment,
+	serverId,
+	channelId,
+	colors,
 }: MessageAttachmentProps) {
 	const isImage = attachment.fileType.startsWith('image/');
 	const isVideo = attachment.fileType.startsWith('video/');
@@ -20,7 +20,7 @@ export default function MessageAttachment({
 		fileType: attachment.fileType,
 		isImage,
 		isVideo,
-		isAudio
+		isAudio,
 	});
 
 	if (isImage) {

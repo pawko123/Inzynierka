@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-	View,
-	Text,
-	StyleSheet,
-	TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
@@ -31,15 +26,13 @@ export default function ServerManagement({
 			<Text style={[styles.title, { color: colors.text }]}>
 				{Resources.ServerManagement.Title}
 			</Text>
-			
+
 			<View style={styles.buttonContainer}>
 				<TouchableOpacity
 					style={[styles.managementButton, { backgroundColor: colors.tint }]}
 					onPress={onManageRoles}
 				>
-					<Text style={[styles.buttonIcon, { color: colors.background }]}>
-						👥
-					</Text>
+					<Text style={[styles.buttonIcon, { color: colors.background }]}>👥</Text>
 					<Text style={[styles.buttonText, { color: colors.background }]}>
 						{Resources.ServerManagement.Manage_Roles}
 					</Text>
@@ -49,9 +42,7 @@ export default function ServerManagement({
 					style={[styles.managementButton, { backgroundColor: colors.tint }]}
 					onPress={onCreateInvite}
 				>
-					<Text style={[styles.buttonIcon, { color: colors.background }]}>
-						🔗
-					</Text>
+					<Text style={[styles.buttonIcon, { color: colors.background }]}>🔗</Text>
 					<Text style={[styles.buttonText, { color: colors.background }]}>
 						{Resources.ServerManagement.Create_Invite}
 					</Text>
@@ -61,9 +52,7 @@ export default function ServerManagement({
 					style={[styles.managementButton, { backgroundColor: colors.tint }]}
 					onPress={onServerSettings}
 				>
-					<Text style={[styles.buttonIcon, { color: colors.background }]}>
-						⚙️
-					</Text>
+					<Text style={[styles.buttonIcon, { color: colors.background }]}>⚙️</Text>
 					<Text style={[styles.buttonText, { color: colors.background }]}>
 						{Resources.ServerManagement.Server_Settings}
 					</Text>

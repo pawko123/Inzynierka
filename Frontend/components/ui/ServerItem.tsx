@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { Colors } from '@/constants/Colors'
+import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
 import { ServerItemProps } from '@/types';
 
@@ -20,10 +20,10 @@ export default function ServerItem({ server, isSelected, onPress }: ServerItemPr
 				// Add data URI prefix - try PNG first, then JPEG
 				imageSource = `data:image/png;base64,${server.logo}`;
 			}
-			
+
 			return (
 				<View style={styles.serverIcon}>
-					<Image 
+					<Image
 						source={{ uri: imageSource }}
 						style={styles.serverIconImage}
 						resizeMode="cover"
@@ -35,11 +35,21 @@ export default function ServerItem({ server, isSelected, onPress }: ServerItemPr
 				</View>
 			);
 		}
-		
+
 		// Fallback to first letter if no logo
 		return (
-			<View style={[styles.serverIcon, { backgroundColor: Colors[colorScheme ?? 'light'].tint }]}>
-				<Text style={[styles.serverIconText, { color: Colors[colorScheme ?? 'light'].background }]}>
+			<View
+				style={[
+					styles.serverIcon,
+					{ backgroundColor: Colors[colorScheme ?? 'light'].tint },
+				]}
+			>
+				<Text
+					style={[
+						styles.serverIconText,
+						{ color: Colors[colorScheme ?? 'light'].background },
+					]}
+				>
 					{server.name.charAt(0).toUpperCase()}
 				</Text>
 			</View>
@@ -58,7 +68,7 @@ export default function ServerItem({ server, isSelected, onPress }: ServerItemPr
 			activeOpacity={0.7}
 		>
 			{getServerIcon()}
-			<Text 
+			<Text
 				style={[styles.tooltip, { color: Colors[colorScheme ?? 'light'].text }]}
 				numberOfLines={1}
 			>

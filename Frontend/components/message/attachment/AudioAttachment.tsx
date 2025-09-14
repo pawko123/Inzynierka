@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-	View,
-	Text,
-	StyleSheet,
-	TouchableOpacity,
-	Dimensions,
-	Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { AudioAttachmentProps } from '@/types/message';
 import { api } from '@/services/api';
@@ -16,11 +9,11 @@ import MobileAudioPlayer from './MobileAudioPlayer';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-export default function AudioAttachment({ 
-	attachment, 
-	serverId, 
-	channelId, 
-	colors 
+export default function AudioAttachment({
+	attachment,
+	serverId,
+	channelId,
+	colors,
 }: AudioAttachmentProps) {
 	const { token } = useAuth();
 	const [audioError, setAudioError] = useState(false);
@@ -34,13 +27,13 @@ export default function AudioAttachment({
 					if (serverId && serverId.trim() !== '') {
 						params.append('serverId', serverId);
 					}
-					
+
 					const response = await api.get(`${attachment.url}?${params.toString()}`, {
-						responseType: 'blob'
+						responseType: 'blob',
 					});
-					
+
 					const blob = response.data;
-					
+
 					if (Platform.OS === 'web') {
 						// For web, create a blob URL
 						const blobUrl = window.URL.createObjectURL(blob);
@@ -54,7 +47,6 @@ export default function AudioAttachment({
 						};
 						reader.readAsDataURL(blob);
 					}
-					
 				} catch (error) {
 					console.error('Error loading audio URL:', error);
 					setAudioError(true);
@@ -135,20 +127,20 @@ export default function AudioAttachment({
 		return (
 			<React.Fragment>
 				<View>
-						{Platform.OS === 'web' ? (
-							<WebAudioPlayer
-								audioUrl={audioUrl}
-								fileType={attachment.fileType}
-								onError={() => setAudioError(true)}
-								colors={colors}
-							/>
-						) : (
-							<MobileAudioPlayer
-								audioUrl={audioUrl}
-								onError={() => setAudioError(true)}
-								colors={colors}
-							/>
-						)}
+					{Platform.OS === 'web' ? (
+						<WebAudioPlayer
+							audioUrl={audioUrl}
+							fileType={attachment.fileType}
+							onError={() => setAudioError(true)}
+							colors={colors}
+						/>
+					) : (
+						<MobileAudioPlayer
+							audioUrl={audioUrl}
+							onError={() => setAudioError(true)}
+							colors={colors}
+						/>
+					)}
 					<Text style={[styles.fileName, { color: colors.text, opacity: 0.7 }]}>
 						{attachment.fileName} • {formatFileSize(attachment.size)}
 					</Text>
@@ -160,10 +152,7 @@ export default function AudioAttachment({
 	// Show error state
 	return (
 		<React.Fragment>
-			<TouchableOpacity
-				onPress={openAudio}
-				disabled={true}
-			>
+			<TouchableOpacity onPress={openAudio} disabled={true}>
 				<View style={[styles.audioPlaceholder, { borderColor: colors.border }]}>
 					<Text style={styles.audioIcon}>🎵</Text>
 					<View style={styles.audioInfo}>

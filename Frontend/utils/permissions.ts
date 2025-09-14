@@ -63,7 +63,8 @@ export const createPermissionCategories = (Resources: any): { [key: string]: Per
 		{
 			type: PermissionType.SERVER_MEMBER,
 			name: Resources.Permissions.SERVER_MEMBER?.Name || 'Server Member',
-			description: Resources.Permissions.SERVER_MEMBER?.Description || 'Basic server membership',
+			description:
+				Resources.Permissions.SERVER_MEMBER?.Description || 'Basic server membership',
 		},
 	],
 	textChannels: [

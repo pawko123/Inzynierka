@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
-import {
-	View,
-	Text,
-	TextInput,
-	Modal,
-	StyleSheet,
-	Alert,
-	TouchableOpacity,
-} from 'react-native';
+import { View, Text, TextInput, Modal, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { Button } from '@/components/ui';
@@ -29,12 +21,12 @@ export default function JoinServerModal({ visible, onClose, onJoinServer }: Join
 		// Handle different invite link formats
 		// e.g., "https://yourapp.com/invite/abc-123-def" or just "abc-123-def"
 		const trimmed = link.trim();
-		
+
 		// If it's just the code
 		if (!trimmed.includes('/')) {
 			return trimmed;
 		}
-		
+
 		// Extract code from URL
 		const parts = trimmed.split('/');
 		const lastPart = parts[parts.length - 1];
@@ -72,7 +64,7 @@ export default function JoinServerModal({ visible, onClose, onJoinServer }: Join
 		} catch (error: any) {
 			console.error('Error joining server:', error);
 			let errorMessage = 'An error occurred';
-			
+
 			if (error.response?.data?.error) {
 				const backendError = error.response.data.error;
 				switch (backendError) {
@@ -89,7 +81,7 @@ export default function JoinServerModal({ visible, onClose, onJoinServer }: Join
 						errorMessage = backendError;
 				}
 			}
-			
+
 			Alert.alert(Resources.JoinServer.Error, errorMessage);
 		} finally {
 			setIsLoading(false);
@@ -156,7 +148,7 @@ export default function JoinServerModal({ visible, onClose, onJoinServer }: Join
 						/>
 						<Button
 							title={
-								isLoading 
+								isLoading
 									? Resources.JoinServer.Joining
 									: Resources.JoinServer.Join_Server
 							}

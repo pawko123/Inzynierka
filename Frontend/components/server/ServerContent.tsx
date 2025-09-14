@@ -1,11 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-	View,
-	Text,
-	StyleSheet,
-	Alert,
-	BackHandler,
-} from 'react-native';
+import { View, Text, StyleSheet, Alert, BackHandler } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useResponsive } from '@/hooks/useResponsive';
 import { Colors } from '@/constants/Colors';
@@ -19,7 +13,11 @@ import RolesManagement from '../rolemanagement/RolesManagement';
 import ChannelChat from '../channel/ChannelChat';
 import { Channel, ServerContentProps } from '@/types/server';
 
-export default function ServerContent({ serverId, serverName, onChannelSelect }: ServerContentProps) {
+export default function ServerContent({
+	serverId,
+	serverName,
+	onChannelSelect,
+}: ServerContentProps) {
 	const colorScheme = useColorScheme();
 	const colors = Colors[colorScheme ?? 'light'];
 	const { isMobile } = useResponsive();
@@ -35,7 +33,7 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 	const [canManageRoles, setCanManageRoles] = useState(false);
 	const [canCreateInvite, setCanCreateInvite] = useState(false);
 	const [showRolesManagement, setShowRolesManagement] = useState(false);
-	
+
 	// Mobile navigation state - true = show sidebar, false = show content
 	const [showMobileSidebar, setShowMobileSidebar] = useState(true);
 
@@ -43,13 +41,14 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 		try {
 			setLoading(true);
 			setError(null);
-			
+
 			const { data } = await api.get(`/server/getChannelsForUser?serverId=${serverId}`);
 			console.log('Fetched channels for server:', serverId, 'Channels:', data);
 			setChannels(data);
 		} catch (err: any) {
 			console.error('Error fetching server channels:', err);
-			const backendErrorMessage = err.response?.data?.error || Resources.ServerContent.Errors.Failed_To_Load;
+			const backendErrorMessage =
+				err.response?.data?.error || Resources.ServerContent.Errors.Failed_To_Load;
 			const localizedErrorMessage = translateError(backendErrorMessage);
 			setError(localizedErrorMessage);
 			Alert.alert(Resources.CreateChannel.Error, localizedErrorMessage);
@@ -60,13 +59,13 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 
 	const checkUserPermissions = useCallback(async () => {
 		if (!currentUser) return;
-		
+
 		try {
 			// Check user's permissions for this server
 			const { data } = await api.post('/server/getUserPermissions', {
 				serverId: serverId,
 				userId: currentUser.id,
-				permissions: ['MANAGE_SERVER', 'MANAGE_ROLES', 'CREATE_INVITE']
+				permissions: ['MANAGE_SERVER', 'MANAGE_ROLES', 'CREATE_INVITE'],
 			});
 			setCanManageServer(data.MANAGE_SERVER || false);
 			setCanManageRoles(data.MANAGE_ROLES || false);
@@ -115,14 +114,14 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 	useEffect(() => {
 		console.log('Channels updated:', channels, 'Loading:', loading, 'Error:', error);
 		console.log('Mobile state:', { isMobile, showMobileSidebar });
-		console.log('Should show sidebar:', (!isMobile || showMobileSidebar));
+		console.log('Should show sidebar:', !isMobile || showMobileSidebar);
 	}, [channels, loading, error, isMobile, showMobileSidebar]);
 
 	const handleChannelPress = (channel: Channel) => {
 		console.log('Selected channel:', channel);
 		setSelectedChannel(channel);
 		onChannelSelect?.(channel.id);
-		
+
 		// On mobile, show content when channel is selected
 		if (isMobile) {
 			setShowMobileSidebar(false);
@@ -135,7 +134,8 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 		if (isMobile) {
 			setShowMobileSidebar(false);
 		}
-	};	const handleCreateChannel = () => {
+	};
+	const handleCreateChannel = () => {
 		setShowCreateChannelModal(true);
 	};
 
@@ -146,10 +146,12 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 
 	return (
 		<>
-			<View style={[
-				isMobile ? styles.mobileContainer : styles.container, 
-				{ backgroundColor: colors.background }
-			]}>
+			<View
+				style={[
+					isMobile ? styles.mobileContainer : styles.container,
+					{ backgroundColor: colors.background },
+				]}
+			>
 				{/* On mobile: show either sidebar OR content. On desktop: show both */}
 				{(!isMobile || showMobileSidebar) && (
 					<ChannelSidebar
@@ -184,13 +186,12 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 								}}
 							/>
 						) : selectedChannel ? (
-							<ChannelChat
-								channel={selectedChannel}
-								serverId={serverId}
-							/>
+							<ChannelChat channel={selectedChannel} serverId={serverId} />
 						) : (
 							<View style={styles.welcomeContainer}>
-								<Text style={[styles.welcomeText, { color: colors.tabIconDefault }]}>
+								<Text
+									style={[styles.welcomeText, { color: colors.tabIconDefault }]}
+								>
 									{Resources.ServerContent.Select_Channel}
 								</Text>
 							</View>
@@ -199,12 +200,12 @@ export default function ServerContent({ serverId, serverName, onChannelSelect }:
 				)}
 			</View>
 
-		<CreateChannelModal
-			visible={showCreateChannelModal}
-			onClose={() => setShowCreateChannelModal(false)}
-			serverId={serverId}
-			onChannelCreated={handleChannelCreated}
-		/>
+			<CreateChannelModal
+				visible={showCreateChannelModal}
+				onClose={() => setShowCreateChannelModal(false)}
+				serverId={serverId}
+				onChannelCreated={handleChannelCreated}
+			/>
 		</>
 	);
 }

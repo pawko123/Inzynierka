@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-	Text,
-	StyleSheet,
-	TouchableOpacity,
-	Image,
-	Dimensions,
-	Platform,
-} from 'react-native';
+import { Text, StyleSheet, TouchableOpacity, Image, Dimensions, Platform } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import FileAttachment from './FileAttachment';
 import ImageViewerModal from './ImageViewerModal';
@@ -15,11 +8,11 @@ import { api } from '@/services/api';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-export default function ImageAttachment({ 
-	attachment, 
-	serverId, 
-	channelId, 
-	colors 
+export default function ImageAttachment({
+	attachment,
+	serverId,
+	channelId,
+	colors,
 }: ImageAttachmentProps) {
 	const [imageError, setImageError] = useState(false);
 	const [imageUrl, setImageUrl] = useState<string>('');
@@ -34,13 +27,13 @@ export default function ImageAttachment({
 					if (serverId && serverId.trim() !== '') {
 						params.append('serverId', serverId);
 					}
-					
+
 					const response = await api.get(`${attachment.url}?${params.toString()}`, {
-						responseType: 'blob'
+						responseType: 'blob',
 					});
-					
+
 					const blob = response.data;
-					
+
 					if (Platform.OS === 'web') {
 						// For web, create a blob URL
 						const blobUrl = window.URL.createObjectURL(blob);
@@ -54,7 +47,6 @@ export default function ImageAttachment({
 						};
 						reader.readAsDataURL(blob);
 					}
-					
 				} catch (error) {
 					console.error('Error loading image URL:', error);
 					setImageError(true);
@@ -134,7 +126,7 @@ export default function ImageAttachment({
 					{attachment.fileName} • {formatFileSize(attachment.size)}
 				</Text>
 			</TouchableOpacity>
-			
+
 			{/* Modal will appear when showImageModal is true */}
 			<ImageViewerModal
 				visible={showImageModal}

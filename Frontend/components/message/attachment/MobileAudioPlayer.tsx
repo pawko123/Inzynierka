@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-	View,
-	Text,
-	TouchableOpacity,
-	StyleSheet,
-	Platform,
-	Dimensions,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, Dimensions } from 'react-native';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 const { width: screenWidth } = Dimensions.get('window');
@@ -17,11 +10,7 @@ interface MobileAudioPlayerProps {
 	colors: any;
 }
 
-export default function MobileAudioPlayer({ 
-	audioUrl, 
-	onError,
-	colors
-}: MobileAudioPlayerProps) {
+export default function MobileAudioPlayer({ audioUrl, onError, colors }: MobileAudioPlayerProps) {
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [duration, setDuration] = useState(0);
 	const [position, setPosition] = useState(0);
@@ -40,13 +29,13 @@ export default function MobileAudioPlayer({
 
 				const { sound: audioSound } = await Audio.Sound.createAsync(
 					{ uri: audioUrl },
-					{ 
-						shouldPlay: false, 
+					{
+						shouldPlay: false,
 						isLooping: false,
 						volume: volume,
-						progressUpdateIntervalMillis: 100 // Update progress more frequently
+						progressUpdateIntervalMillis: 100, // Update progress more frequently
 					},
-					onPlaybackStatusUpdate
+					onPlaybackStatusUpdate,
 				);
 				soundRef.current = audioSound;
 			} catch (error) {
@@ -61,7 +50,7 @@ export default function MobileAudioPlayer({
 			const newPosition = status.positionMillis || 0;
 			const newDuration = status.durationMillis || 0;
 			const newIsPlaying = status.isPlaying;
-			
+
 			setPosition(newPosition);
 			setDuration(newDuration);
 			setIsPlaying(newIsPlaying);
@@ -115,7 +104,7 @@ export default function MobileAudioPlayer({
 		setIsMuted(newMutedState);
 		const newVolume = newMutedState ? 0 : 1.0;
 		setVolume(newVolume);
-		
+
 		if (soundRef.current) {
 			try {
 				await soundRef.current.setVolumeAsync(newVolume);
@@ -239,55 +228,51 @@ export default function MobileAudioPlayer({
 		<View style={[{ borderColor: colors.border }, styles.audioPlayer]}>
 			<View style={styles.mobileAudioPlayer}>
 				<View style={styles.controlsRow}>
-					<TouchableOpacity 
+					<TouchableOpacity
 						style={styles.mobilePlayButton}
 						onPress={togglePlayPause}
 						activeOpacity={0.7}
 					>
-						<Ionicons 
-							name={isPlaying ? "pause" : "play"} 
-							size={16} 
-							color="white" 
+						<Ionicons
+							name={isPlaying ? 'pause' : 'play'}
+							size={16}
+							color="white"
 							style={styles.playIcon}
 						/>
 					</TouchableOpacity>
-					
+
 					<View style={styles.progressContainer}>
-						<TouchableOpacity 
+						<TouchableOpacity
 							style={styles.progressWrapper}
 							onPress={handleProgressTouch}
 							activeOpacity={0.8}
 						>
 							<View style={styles.mobileProgress}>
-								<View 
+								<View
 									style={[
-										styles.mobileProgressFill, 
-										{ 
-											width: duration > 0 ? `${Math.max(0, Math.min(100, (position / duration) * 100))}%` : '0%' 
-										}
-									]} 
+										styles.mobileProgressFill,
+										{
+											width:
+												duration > 0
+													? `${Math.max(0, Math.min(100, (position / duration) * 100))}%`
+													: '0%',
+										},
+									]}
 								/>
 							</View>
 						</TouchableOpacity>
-						
+
 						<View style={styles.timeContainer}>
-							<Text style={styles.mobileTime}>
-								{formatTime(position)}
-							</Text>
-							<Text style={styles.mobileTime}>
-								{formatTime(duration)}
-							</Text>
+							<Text style={styles.mobileTime}>{formatTime(position)}</Text>
+							<Text style={styles.mobileTime}>{formatTime(duration)}</Text>
 						</View>
 					</View>
-					
-					<TouchableOpacity 
-						style={styles.volumeButton}
-						onPress={toggleMute}
-					>
-						<Ionicons 
-							name={isMuted ? "volume-mute" : "volume-high"} 
-							size={16} 
-							color={colors.text} 
+
+					<TouchableOpacity style={styles.volumeButton} onPress={toggleMute}>
+						<Ionicons
+							name={isMuted ? 'volume-mute' : 'volume-high'}
+							size={16}
+							color={colors.text}
 						/>
 					</TouchableOpacity>
 				</View>

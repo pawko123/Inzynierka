@@ -6,23 +6,38 @@ import { getStrings } from '@/i18n';
 import { Button } from '@/components/ui';
 import { WelcomeScreenProps } from '@/types/ui';
 
-export default function WelcomeScreen({ 
-	onCreateServer, 
-	onCreateDirectChannel, 
-	onJoinServer 
+export default function WelcomeScreen({
+	onCreateServer,
+	onCreateDirectChannel,
+	onJoinServer,
 }: WelcomeScreenProps) {
 	const colorScheme = useColorScheme();
 	const Resources = getStrings();
 
 	return (
-		<View style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}>
+		<View
+			style={[
+				styles.container,
+				{ backgroundColor: Colors[colorScheme ?? 'light'].background },
+			]}
+		>
 			<View style={styles.content}>
 				{/* Welcome Message */}
 				<View style={styles.welcomeSection}>
-					<Text style={[styles.welcomeTitle, { color: Colors[colorScheme ?? 'light'].text }]}>
+					<Text
+						style={[
+							styles.welcomeTitle,
+							{ color: Colors[colorScheme ?? 'light'].text },
+						]}
+					>
 						{Resources.Welcome.Title}
 					</Text>
-					<Text style={[styles.welcomeSubtitle, { color: Colors[colorScheme ?? 'light'].tabIconDefault }]}>
+					<Text
+						style={[
+							styles.welcomeSubtitle,
+							{ color: Colors[colorScheme ?? 'light'].tabIconDefault },
+						]}
+					>
 						{Resources.Welcome.Subtitle}
 					</Text>
 				</View>
@@ -53,7 +68,12 @@ export default function WelcomeScreen({
 
 				{/* Additional Info */}
 				<View style={styles.infoSection}>
-					<Text style={[styles.infoText, { color: Colors[colorScheme ?? 'light'].tabIconDefault }]}>
+					<Text
+						style={[
+							styles.infoText,
+							{ color: Colors[colorScheme ?? 'light'].tabIconDefault },
+						]}
+					>
 						{Resources.Welcome.Info}
 					</Text>
 				</View>

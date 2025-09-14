@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-	View,
-	Text,
-	StyleSheet,
-	TouchableOpacity,
-	ActivityIndicator,
-	Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
@@ -20,11 +13,7 @@ import ServerMembersTab from '../server/ServerMembersTab';
 import { createPermissionCategories } from '@/utils/permissions';
 import { Role, ServerMember, RolesManagementProps } from '@/types/roles';
 
-export default function RolesManagement({
-	serverId,
-	serverName,
-	onClose,
-}: RolesManagementProps) {
+export default function RolesManagement({ serverId, serverName, onClose }: RolesManagementProps) {
 	const colorScheme = useColorScheme();
 	const colors = Colors[colorScheme ?? 'light'];
 	const Resources = getStrings();
@@ -46,7 +35,7 @@ export default function RolesManagement({
 	const fetchServerData = useCallback(async () => {
 		try {
 			setLoading(true);
-			
+
 			// Fetch server with roles
 			const serverResponse = await api.get(`/server/getServer?serverId=${serverId}`);
 			setRoles(serverResponse.data.roles || []);
@@ -56,7 +45,9 @@ export default function RolesManagement({
 			setMembers(membersResponse.data || []);
 		} catch (err: any) {
 			console.error('Error fetching server data:', err);
-			const errorMessage = translateError(err.response?.data?.error || 'Failed to load server data');
+			const errorMessage = translateError(
+				err.response?.data?.error || 'Failed to load server data',
+			);
 			Alert.alert('Error', errorMessage);
 		} finally {
 			setLoading(false);
@@ -74,57 +65,66 @@ export default function RolesManagement({
 				name: roleName,
 				color: roleColor,
 			});
-			
+
 			// Refresh roles
 			await fetchServerData();
 			setShowCreateRoleModal(false);
-			
+
 			Alert.alert('Success', 'Role created successfully');
 		} catch (err: any) {
 			console.error('Error creating role:', err);
-			const errorMessage = translateError(err.response?.data?.error || 'Failed to create role');
+			const errorMessage = translateError(
+				err.response?.data?.error || 'Failed to create role',
+			);
 			Alert.alert('Error', errorMessage);
 		}
 	};
 
 	const handleAssignRole = async (memberId: string, roleId: string) => {
 		const loadingKey = `${memberId}-${roleId}`;
-		setAssigningRoles(prev => new Set(prev).add(loadingKey));
-		
+		setAssigningRoles((prev) => new Set(prev).add(loadingKey));
+
 		try {
 			await api.post('/role/assignRole', {
 				serverId,
 				memberId,
 				roleId,
 			});
-			
+
 			// Only update UI after successful API response
-			const roleToAssign = roles.find(r => r.id === roleId);
+			const roleToAssign = roles.find((r) => r.id === roleId);
 			if (roleToAssign && selectedMember) {
 				// Update selected member in modal
-				setSelectedMember(prev => {
+				setSelectedMember((prev) => {
 					if (!prev) return prev;
 					return {
 						...prev,
-						roles: [...(prev.roles || []), roleToAssign]
+						roles: [...(prev.roles || []), roleToAssign],
 					};
 				});
-				
+
 				// Update members list
-				setMembers(prev => prev.map(member => 
-					member.id === memberId 
-						? { ...member, roles: [...(member.roles || []), roleToAssign] }
-						: member
-				));
+				setMembers((prev) =>
+					prev.map((member) =>
+						member.id === memberId
+							? { ...member, roles: [...(member.roles || []), roleToAssign] }
+							: member,
+					),
+				);
 			}
-			
-			Alert.alert(Resources.ServerManagement.Success, Resources.ServerManagement.Role_Assigned_Success);
+
+			Alert.alert(
+				Resources.ServerManagement.Success,
+				Resources.ServerManagement.Role_Assigned_Success,
+			);
 		} catch (err: any) {
 			console.error('Error assigning role:', err);
-			const errorMessage = translateError(err.response?.data?.error || 'Failed to assign role');
+			const errorMessage = translateError(
+				err.response?.data?.error || 'Failed to assign role',
+			);
 			Alert.alert(Resources.ServerManagement.Error, errorMessage);
 		} finally {
-			setAssigningRoles(prev => {
+			setAssigningRoles((prev) => {
 				const newSet = new Set(prev);
 				newSet.delete(loadingKey);
 				return newSet;
@@ -134,41 +134,51 @@ export default function RolesManagement({
 
 	const handleRemoveRole = async (memberId: string, roleId: string) => {
 		const loadingKey = `${memberId}-${roleId}`;
-		setRemovingRoles(prev => new Set(prev).add(loadingKey));
-		
+		setRemovingRoles((prev) => new Set(prev).add(loadingKey));
+
 		try {
 			await api.post('/role/removeRole', {
 				serverId,
 				memberId,
 				roleId,
 			});
-			
+
 			// Only update UI after successful API response
 			if (selectedMember) {
 				// Update selected member in modal
-				setSelectedMember(prev => {
+				setSelectedMember((prev) => {
 					if (!prev) return prev;
 					return {
 						...prev,
-						roles: prev.roles?.filter(r => r.id !== roleId) || []
+						roles: prev.roles?.filter((r) => r.id !== roleId) || [],
 					};
 				});
-				
+
 				// Update members list
-				setMembers(prev => prev.map(member => 
-					member.id === memberId 
-						? { ...member, roles: member.roles?.filter(r => r.id !== roleId) || [] }
-						: member
-				));
+				setMembers((prev) =>
+					prev.map((member) =>
+						member.id === memberId
+							? {
+									...member,
+									roles: member.roles?.filter((r) => r.id !== roleId) || [],
+								}
+							: member,
+					),
+				);
 			}
-			
-			Alert.alert(Resources.ServerManagement.Success, Resources.ServerManagement.Role_Removed_Success);
+
+			Alert.alert(
+				Resources.ServerManagement.Success,
+				Resources.ServerManagement.Role_Removed_Success,
+			);
 		} catch (err: any) {
 			console.error('Error removing role:', err);
-			const errorMessage = translateError(err.response?.data?.error || 'Failed to remove role');
+			const errorMessage = translateError(
+				err.response?.data?.error || 'Failed to remove role',
+			);
 			Alert.alert(Resources.ServerManagement.Error, errorMessage);
 		} finally {
-			setRemovingRoles(prev => {
+			setRemovingRoles((prev) => {
 				const newSet = new Set(prev);
 				newSet.delete(loadingKey);
 				return newSet;
@@ -188,19 +198,24 @@ export default function RolesManagement({
 					onPress: async () => {
 						try {
 							await api.delete(`/role/delete?roleId=${roleId}`);
-							
+
 							// Refresh roles
 							await fetchServerData();
-							
-							Alert.alert(Resources.ServerManagement.Success, Resources.ServerManagement.Role_Deleted);
+
+							Alert.alert(
+								Resources.ServerManagement.Success,
+								Resources.ServerManagement.Role_Deleted,
+							);
 						} catch (err: any) {
 							console.error('Error deleting role:', err);
-							const errorMessage = translateError(err.response?.data?.error || 'Failed to delete role');
+							const errorMessage = translateError(
+								err.response?.data?.error || 'Failed to delete role',
+							);
 							Alert.alert(Resources.ServerManagement.Error, errorMessage);
 						}
 					},
 				},
-			]
+			],
 		);
 	};
 
@@ -229,12 +244,12 @@ export default function RolesManagement({
 					<Text
 						style={[
 							styles.tabText,
-							selectedTab === 'roles' 
-								? { 
-									color: colorScheme === 'dark' ? '#000000' : '#FFFFFF', 
-									fontWeight: '600' 
-								}
-								: { color: colors.text }
+							selectedTab === 'roles'
+								? {
+										color: colorScheme === 'dark' ? '#000000' : '#FFFFFF',
+										fontWeight: '600',
+									}
+								: { color: colors.text },
 						]}
 					>
 						{Resources.ServerManagement.Roles}
@@ -250,12 +265,12 @@ export default function RolesManagement({
 					<Text
 						style={[
 							styles.tabText,
-							selectedTab === 'members' 
-								? { 
-									color: colorScheme === 'dark' ? '#000000' : '#FFFFFF', 
-									fontWeight: '600' 
-								}
-								: { color: colors.text }
+							selectedTab === 'members'
+								? {
+										color: colorScheme === 'dark' ? '#000000' : '#FFFFFF',
+										fontWeight: '600',
+									}
+								: { color: colors.text },
 						]}
 					>
 						{Resources.ServerManagement.Members}
@@ -284,7 +299,7 @@ export default function RolesManagement({
 							members={members}
 							roles={roles}
 							onManageMemberRoles={(memberId) => {
-								const member = members.find(m => m.id === memberId);
+								const member = members.find((m) => m.id === memberId);
 								if (member) {
 									setSelectedMember(member);
 									setShowMemberRoleModal(true);

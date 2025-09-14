@@ -60,11 +60,14 @@ export default function CreateModal({
 		}
 
 		setIsLoading(true);
-		
+
 		try {
 			if (selectedType === 'server') {
 				if (!serverName.trim()) {
-					Alert.alert(Resources.CreateModal.Error, Resources.CreateModal.Server_Name_Required);
+					Alert.alert(
+						Resources.CreateModal.Error,
+						Resources.CreateModal.Server_Name_Required,
+					);
 					return;
 				}
 
@@ -86,7 +89,10 @@ export default function CreateModal({
 					},
 				});
 
-				Alert.alert(Resources.CreateModal.Create_Server, Resources.CreateModal.Server_Created);
+				Alert.alert(
+					Resources.CreateModal.Create_Server,
+					Resources.CreateModal.Server_Created,
+				);
 				onCreateServer?.(data);
 			} else {
 				if (!channelName.trim() || !userId.trim()) {
@@ -100,14 +106,18 @@ export default function CreateModal({
 					name: channelName.trim(),
 				});
 
-				Alert.alert(Resources.CreateModal.Create_Channel, Resources.CreateModal.Channel_Created);
+				Alert.alert(
+					Resources.CreateModal.Create_Channel,
+					Resources.CreateModal.Channel_Created,
+				);
 				onCreateDirectChannel?.(data);
 			}
 
 			onClose();
 		} catch (error: any) {
 			console.error('Error creating:', error);
-			const errorMessage = error.response?.data?.error || error.response?.data?.message || 'An error occurred';
+			const errorMessage =
+				error.response?.data?.error || error.response?.data?.message || 'An error occurred';
 			Alert.alert(Resources.CreateModal.Error, errorMessage);
 		} finally {
 			setIsLoading(false);
@@ -133,11 +143,11 @@ export default function CreateModal({
 
 			// Request permission for mobile platforms
 			const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-			
+
 			if (permissionResult.granted === false) {
 				Alert.alert(
 					Resources.CreateModal.Permission_Required,
-					Resources.CreateModal.Permission_Message
+					Resources.CreateModal.Permission_Message,
 				);
 				return;
 			}
@@ -159,7 +169,7 @@ export default function CreateModal({
 						text: Resources.CreateModal.Cancel,
 						style: 'cancel',
 					},
-				]
+				],
 			);
 		} catch (error) {
 			console.error('Error requesting permission:', error);
@@ -170,11 +180,11 @@ export default function CreateModal({
 	const launchCamera = async () => {
 		try {
 			const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-			
+
 			if (cameraPermission.granted === false) {
 				Alert.alert(
 					Resources.CreateModal.Permission_Required,
-					Resources.CreateModal.Camera_Permission_Message
+					Resources.CreateModal.Camera_Permission_Message,
 				);
 				return;
 			}
@@ -208,7 +218,7 @@ export default function CreateModal({
 				if (permissionResult.granted === false) {
 					Alert.alert(
 						Resources.CreateModal.Permission_Required,
-						Resources.CreateModal.Permission_Message
+						Resources.CreateModal.Permission_Message,
 					);
 					return;
 				}
@@ -237,12 +247,7 @@ export default function CreateModal({
 	};
 
 	return (
-		<Modal
-			visible={visible}
-			transparent={true}
-			animationType="fade"
-			onRequestClose={onClose}
-		>
+		<Modal visible={visible} transparent={true} animationType="fade" onRequestClose={onClose}>
 			<View style={styles.overlay}>
 				<View style={[styles.modalContainer, { backgroundColor: colors.card }]}>
 					{/* Header */}
@@ -251,7 +256,9 @@ export default function CreateModal({
 							{Resources.CreateModal.Title}
 						</Text>
 						<TouchableOpacity onPress={onClose} style={styles.closeButton}>
-							<Text style={[styles.closeButtonText, { color: colors.tabIconDefault }]}>
+							<Text
+								style={[styles.closeButtonText, { color: colors.tabIconDefault }]}
+							>
 								✕
 							</Text>
 						</TouchableOpacity>
@@ -312,7 +319,12 @@ export default function CreateModal({
 									/>
 									{serverLogo && (
 										<View style={styles.logoPreviewContainer}>
-											<Text style={[styles.logoPreviewLabel, { color: colors.text }]}>
+											<Text
+												style={[
+													styles.logoPreviewLabel,
+													{ color: colors.text },
+												]}
+											>
 												{Resources.CreateModal.Logo_Preview}
 											</Text>
 											<Image
@@ -381,9 +393,13 @@ export default function CreateModal({
 						/>
 						<Button
 							title={
-								isLoading 
-									? (selectedType === 'server' ? Resources.CreateModal.Creating_Server : Resources.CreateModal.Creating_Channel) 
-									: (selectedType === 'server' ? Resources.CreateModal.Create_Server : Resources.CreateModal.Create_Channel)
+								isLoading
+									? selectedType === 'server'
+										? Resources.CreateModal.Creating_Server
+										: Resources.CreateModal.Creating_Channel
+									: selectedType === 'server'
+										? Resources.CreateModal.Create_Server
+										: Resources.CreateModal.Create_Channel
 							}
 							onPress={handleCreate}
 							variant="primary"

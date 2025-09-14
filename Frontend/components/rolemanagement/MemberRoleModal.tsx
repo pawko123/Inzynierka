@@ -47,9 +47,9 @@ export default function MemberRoleModal({
 					</Text>
 					<View style={{ flexDirection: 'row', alignItems: 'center' }}>
 						{(assigningRoles.size > 0 || removingRoles.size > 0) && (
-							<ActivityIndicator 
-								size="small" 
-								color={colors.tint} 
+							<ActivityIndicator
+								size="small"
+								color={colors.tint}
 								style={{ marginRight: 12 }}
 							/>
 						)}
@@ -57,7 +57,10 @@ export default function MemberRoleModal({
 							onPress={onClose}
 							style={[
 								styles.closeButton,
-								{ opacity: (assigningRoles.size > 0 || removingRoles.size > 0) ? 0.5 : 1 }
+								{
+									opacity:
+										assigningRoles.size > 0 || removingRoles.size > 0 ? 0.5 : 1,
+								},
 							]}
 							disabled={assigningRoles.size > 0 || removingRoles.size > 0}
 						>
@@ -72,19 +75,27 @@ export default function MemberRoleModal({
 							{Resources.ServerManagement.Current_Roles}
 						</Text>
 					</View>
-					
+
 					{member.roles && member.roles.length > 0 ? (
 						<View style={styles.listContainer}>
 							{member.roles.map((role) => (
-								<View key={role.id} style={[
-									styles.roleItem,
-									{ 
-										backgroundColor: colors.card,
-										borderColor: colors.border
-									}
-								]}>
+								<View
+									key={role.id}
+									style={[
+										styles.roleItem,
+										{
+											backgroundColor: colors.card,
+											borderColor: colors.border,
+										},
+									]}
+								>
 									<View style={styles.roleHeader}>
-										<View style={[styles.roleColorIndicator, { backgroundColor: role.color || '#888888' }]} />
+										<View
+											style={[
+												styles.roleColorIndicator,
+												{ backgroundColor: role.color || '#888888' },
+											]}
+										/>
 										<Text style={[styles.roleName, { color: colors.text }]}>
 											{role.name}
 										</Text>
@@ -92,11 +103,15 @@ export default function MemberRoleModal({
 									<TouchableOpacity
 										onPress={() => onRemoveRole(member.id, role.id)}
 										style={[
-											styles.deleteButton, 
-											{ 
+											styles.deleteButton,
+											{
 												backgroundColor: '#ff4444',
-												opacity: removingRoles.has(`${member.id}-${role.id}`) ? 0.6 : 1
-											}
+												opacity: removingRoles.has(
+													`${member.id}-${role.id}`,
+												)
+													? 0.6
+													: 1,
+											},
 										]}
 										disabled={removingRoles.has(`${member.id}-${role.id}`)}
 									>
@@ -122,54 +137,82 @@ export default function MemberRoleModal({
 							{Resources.ServerManagement.Available_Roles}
 						</Text>
 					</View>
-					
-					{roles.filter(role => 
-						!member.roles?.some(memberRole => memberRole.id === role.id)
+
+					{roles.filter(
+						(role) => !member.roles?.some((memberRole) => memberRole.id === role.id),
 					).length > 0 ? (
 						<View style={styles.listContainer}>
 							{roles
-								.filter(role => !member.roles?.some(memberRole => memberRole.id === role.id))
+								.filter(
+									(role) =>
+										!member.roles?.some(
+											(memberRole) => memberRole.id === role.id,
+										),
+								)
 								.map((role) => (
-								<View key={role.id} style={[
-									styles.roleItem,
-									{ 
-										backgroundColor: colors.card,
-										borderColor: colors.border
-									}
-								]}>
-									<View style={styles.roleHeader}>
-										<View style={[styles.roleColorIndicator, { backgroundColor: role.color || '#888888' }]} />
-										<Text style={[styles.roleName, { color: colors.text }]}>
-											{role.name}
-										</Text>
-									</View>
-									<TouchableOpacity
-										onPress={() => onAssignRole(member.id, role.id)}
+									<View
+										key={role.id}
 										style={[
-											styles.createButton, 
-											{ 
-												backgroundColor: colors.tint,
-												opacity: assigningRoles.has(`${member.id}-${role.id}`) ? 0.6 : 1
-											}
+											styles.roleItem,
+											{
+												backgroundColor: colors.card,
+												borderColor: colors.border,
+											},
 										]}
-										disabled={assigningRoles.has(`${member.id}-${role.id}`)}
 									>
-										{assigningRoles.has(`${member.id}-${role.id}`) ? (
-											<ActivityIndicator 
-												size="small" 
-												color={colorScheme === 'dark' ? '#000000' : '#FFFFFF'} 
+										<View style={styles.roleHeader}>
+											<View
+												style={[
+													styles.roleColorIndicator,
+													{ backgroundColor: role.color || '#888888' },
+												]}
 											/>
-										) : (
-											<Text style={[
-												styles.createButtonText,
-												{ color: colorScheme === 'dark' ? '#000000' : '#FFFFFF' }
-											]}>
-												{Resources.ServerManagement.Assign}
+											<Text style={[styles.roleName, { color: colors.text }]}>
+												{role.name}
 											</Text>
-										)}
-									</TouchableOpacity>
-								</View>
-							))}
+										</View>
+										<TouchableOpacity
+											onPress={() => onAssignRole(member.id, role.id)}
+											style={[
+												styles.createButton,
+												{
+													backgroundColor: colors.tint,
+													opacity: assigningRoles.has(
+														`${member.id}-${role.id}`,
+													)
+														? 0.6
+														: 1,
+												},
+											]}
+											disabled={assigningRoles.has(`${member.id}-${role.id}`)}
+										>
+											{assigningRoles.has(`${member.id}-${role.id}`) ? (
+												<ActivityIndicator
+													size="small"
+													color={
+														colorScheme === 'dark'
+															? '#000000'
+															: '#FFFFFF'
+													}
+												/>
+											) : (
+												<Text
+													style={[
+														styles.createButtonText,
+														{
+															color:
+																colorScheme === 'dark'
+																	? '#000000'
+																	: '#FFFFFF',
+														},
+													]}
+												>
+													{Resources.ServerManagement.Assign}
+												</Text>
+											)}
+										</TouchableOpacity>
+									</View>
+								))}
 						</View>
 					) : (
 						<Text style={[styles.placeholder, { color: colors.text }]}>
