@@ -48,6 +48,13 @@ export interface VideoAttachmentProps {
 	colors: any;
 }
 
+export interface AudioAttachmentProps {
+	attachment: MessageAttachmentData;
+	serverId?: string;
+	channelId: string;
+	colors: any;
+}
+
 export interface ImageAttachmentProps {
 	attachment: MessageAttachmentData;
 	serverId?: string;

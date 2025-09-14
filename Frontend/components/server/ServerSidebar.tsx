@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
 import {
 	View,
 	Text,
@@ -18,12 +18,19 @@ import type { Server, DirectChannel } from '@/types/sidebar';
 import { getStrings } from '@/i18n';
 import { MainServerSidebarProps } from '@/types/server';
 
-export default function ServerSidebar({ 
+export interface ServerSidebarRef {
+	refreshData: () => Promise<void>;
+	addServer: (server: Server) => void;
+	addDirectChannel: (channel: DirectChannel) => void;
+}
+
+const ServerSidebar = forwardRef<ServerSidebarRef, MainServerSidebarProps>(({ 
 	onServerSelect, 
 	onDirectChannelSelect,
 	onAddServer,
-	onCreateDirectMessage 
-}: MainServerSidebarProps) {
+	onCreateDirectMessage,
+	onJoinServer
+}, ref) => {
 	const colorScheme = useColorScheme();
 	const { currentUser, signOut } = useAuth();
 	const [servers, setServers] = useState<Server[]>([]);
@@ -58,6 +65,17 @@ export default function ServerSidebar({
 			setLoading(false);
 		}
 	}, [Resources.Sidebar.Errors.Fetch_failed]);
+
+	// Expose methods to parent component
+	useImperativeHandle(ref, () => ({
+		refreshData: fetchUserData,
+		addServer: (server: Server) => {
+			setServers(prev => [...prev, server]);
+		},
+		addDirectChannel: (channel: DirectChannel) => {
+			setDirectChannels(prev => [...prev, channel]);
+		},
+	}), [fetchUserData]);
 
 	useEffect(() => {
 		if (currentUser) {
@@ -154,6 +172,7 @@ export default function ServerSidebar({
 			<SidebarActionButtons
 				onAddServer={onAddServer}
 				onCreateDirectMessage={onCreateDirectMessage}
+				onJoinServer={onJoinServer}
 			/>
 			
 			{/* Logout Button */}
@@ -167,7 +186,11 @@ export default function ServerSidebar({
 			</TouchableOpacity>
 		</View>
 	);
-}
+});
+
+ServerSidebar.displayName = 'ServerSidebar';
+
+export default ServerSidebar;
 
 const styles = StyleSheet.create({
 	container: {

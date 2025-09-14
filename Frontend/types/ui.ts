@@ -20,6 +20,7 @@ export interface WelcomeScreenProps {
 export interface SidebarActionsProps {
 	onAddServer?: () => void;
 	onCreateDirectMessage?: () => void;
+	onJoinServer?: () => void;
 }
 
 export interface ServerItemProps {

@@ -2,6 +2,7 @@ import React from 'react';
 import { MessageAttachmentProps } from '@/types/message';
 import ImageAttachment from './ImageAttachment';
 import VideoAttachment from './VideoAttachment';
+import AudioAttachment from './AudioAttachment';
 import FileAttachment from './FileAttachment';
 
 export default function MessageAttachment({ 
@@ -12,12 +13,14 @@ export default function MessageAttachment({
 }: MessageAttachmentProps) {
 	const isImage = attachment.fileType.startsWith('image/');
 	const isVideo = attachment.fileType.startsWith('video/');
+	const isAudio = attachment.fileType.startsWith('audio/');
 
 	console.log('MessageAttachment:', {
 		fileName: attachment.fileName,
 		fileType: attachment.fileType,
 		isImage,
-		isVideo
+		isVideo,
+		isAudio
 	});
 
 	if (isImage) {
@@ -44,8 +47,20 @@ export default function MessageAttachment({
 		);
 	}
 
+	if (isAudio) {
+		console.log('Rendering AudioAttachment for:', attachment.fileName);
+		return (
+			<AudioAttachment
+				attachment={attachment}
+				serverId={serverId}
+				channelId={channelId}
+				colors={colors}
+			/>
+		);
+	}
+
 	console.log('Rendering FileAttachment for:', attachment.fileName);
-	// For all other file types (including audio), show file attachment
+	// For all other file types, show file attachment
 	return (
 		<FileAttachment
 			attachment={attachment}

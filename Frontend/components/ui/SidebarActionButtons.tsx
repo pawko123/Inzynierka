@@ -5,7 +5,7 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { SidebarActionsProps } from '@/types';
 
-export default function SidebarActionButtons({ onAddServer, onCreateDirectMessage }: SidebarActionsProps) {
+export default function SidebarActionButtons({ onAddServer, onCreateDirectMessage, onJoinServer }: SidebarActionsProps) {
 	const colorScheme = useColorScheme();
 	const colors = Colors[colorScheme ?? 'light'];
 
@@ -22,24 +22,42 @@ export default function SidebarActionButtons({ onAddServer, onCreateDirectMessag
 		</View>
 	);
 
+	const JoinIcon = () => (
+		<View style={[styles.joinIcon, { borderColor: colors.tint }]}>
+			<View style={[styles.joinArrow, { backgroundColor: colors.tint }]} />
+		</View>
+	);
+
 	return (
 		<View style={styles.container}>
-			{/* Add Server Button */}
-			<Button
-				onPress={onAddServer || (() => console.log('Add server'))}
-				variant="outline"
-				size="medium"
-				isCircular={true}
-				icon={<PlusIcon />}
-			/>
+			{/* Create buttons row */}
+			<View style={styles.createButtonsRow}>
+				{/* Add Server Button */}
+				<Button
+					onPress={onAddServer || (() => console.log('Add server'))}
+					variant="outline"
+					size="medium"
+					isCircular={true}
+					icon={<PlusIcon />}
+				/>
+				
+				{/* Create Direct Message Button */}
+				<Button
+					onPress={onCreateDirectMessage || (() => console.log('Create DM'))}
+					variant="outline"
+					size="medium"
+					isCircular={true}
+					icon={<MessageIcon />}
+				/>
+			</View>
 			
-			{/* Create Direct Message Button */}
+			{/* Join Server Button - below create buttons */}
 			<Button
-				onPress={onCreateDirectMessage || (() => console.log('Create DM'))}
+				onPress={onJoinServer || (() => console.log('Join server'))}
 				variant="outline"
 				size="medium"
 				isCircular={true}
-				icon={<MessageIcon />}
+				icon={<JoinIcon />}
 			/>
 		</View>
 	);
@@ -47,10 +65,16 @@ export default function SidebarActionButtons({ onAddServer, onCreateDirectMessag
 
 const styles = StyleSheet.create({
 	container: {
-		flexDirection: 'row',
+		flexDirection: 'column',
 		gap: 8,
 		paddingHorizontal: 8,
 		paddingVertical: 12,
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	createButtonsRow: {
+		flexDirection: 'row',
+		gap: 8,
 		justifyContent: 'center',
 	},
 	iconContainer: {
@@ -81,6 +105,20 @@ const styles = StyleSheet.create({
 	},
 	messageIconDot: {
 		width: 2,
+		height: 2,
+		borderRadius: 1,
+	},
+	joinIcon: {
+		width: 14,
+		height: 14,
+		borderWidth: 1.5,
+		borderRadius: 7,
+		justifyContent: 'center',
+		alignItems: 'center',
+		position: 'relative',
+	},
+	joinArrow: {
+		width: 6,
 		height: 2,
 		borderRadius: 1,
 	},

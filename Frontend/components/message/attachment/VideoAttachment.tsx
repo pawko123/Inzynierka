@@ -8,8 +8,10 @@ import {
 	Platform,
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
-import { FileService } from '@/services/FileService';
 import { VideoAttachmentProps } from '@/types/message';
+import VideoViewerModal from './VideoViewerModal';
+import { api } from '@/services/api';
+import { getStrings } from '@/i18n';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -22,62 +24,48 @@ export default function VideoAttachment({
 	const { token } = useAuth();
 	const [videoError, setVideoError] = useState(false);
 	const [videoUrl, setVideoUrl] = useState<string>('');
-	const [useFallback, setUseFallback] = useState(false);
+	const [showVideoModal, setShowVideoModal] = useState(false);
 
 	useEffect(() => {
-		let currentVideoUrl = '';
-		
-		const loadSecureVideoUrl = async () => {
+		const loadVideoUrl = async () => {
 			if (token) {
 				try {
-					console.log('Loading secure video URL for:', attachment.fileName);
-					
-					if (!useFallback) {
-						// First try: secure blob URL
-						try {
-							const secureUrl = await FileService.getSecureFileUrl(
-								attachment,
-								channelId,
-								token,
-								serverId
-							);
-							console.log('Secure video URL loaded:', secureUrl ? 'Success' : 'Failed');
-							currentVideoUrl = secureUrl;
-							setVideoUrl(secureUrl);
-							return;
-						} catch (blobError) {
-							console.log('Blob URL failed, trying fallback:', blobError);
-							setUseFallback(true);
-						}
+					const params = new URLSearchParams({ channelId });
+					if (serverId && serverId.trim() !== '') {
+						params.append('serverId', serverId);
 					}
 					
-					// Fallback: direct URL (will need browser to handle auth differently)
-					const directUrl = await FileService.getDirectFileUrl(
-						attachment,
-						channelId,
-						token,
-						serverId
-					);
-					console.log('Using direct URL fallback:', directUrl);
-					currentVideoUrl = directUrl;
-					setVideoUrl(directUrl);
+					const response = await api.get(`${attachment.url}?${params.toString()}`, {
+						responseType: 'blob'
+					});
+					
+					const blob = response.data;
+					
+					if (Platform.OS === 'web') {
+						// For web, create a blob URL
+						const blobUrl = window.URL.createObjectURL(blob);
+						setVideoUrl(blobUrl);
+					} else {
+						// For mobile, convert blob to data URL
+						const reader = new FileReader();
+						reader.onload = () => {
+							const dataUrl = reader.result as string;
+							setVideoUrl(dataUrl);
+						};
+						reader.readAsDataURL(blob);
+					}
 					
 				} catch (error) {
 					console.error('Error loading video URL:', error);
 					setVideoError(true);
 				}
+			} else {
+				setVideoError(true);
 			}
 		};
 
-		loadSecureVideoUrl();
-		
-		// Cleanup blob URL when component unmounts or dependencies change
-		return () => {
-			if (currentVideoUrl && currentVideoUrl.startsWith('blob:')) {
-				URL.revokeObjectURL(currentVideoUrl);
-			}
-		};
-	}, [attachment, channelId, token, serverId, useFallback]);
+		loadVideoUrl();
+	}, [attachment, channelId, token, serverId]);
 
 	const formatFileSize = (bytes: number) => {
 		if (bytes === 0) return '0 Bytes';
@@ -87,25 +75,21 @@ export default function VideoAttachment({
 		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 	};
 
+	const strings = getStrings();
+
 	const openVideo = async () => {
-		if (!token) {
-			console.error('No auth token available');
+		if (!token || !videoUrl) {
+			console.error('No auth token or video URL available');
 			return;
 		}
 
 		try {
-			// For videos on web, if we have a videoUrl, open it in new tab
-			// For mobile or if no videoUrl, download/open externally
-			if (Platform.OS === 'web' && videoUrl && !videoError) {
-				window.open(videoUrl, '_blank');
+			if (Platform.OS === 'web') {
+				// For web, we don't need modal since we have inline video player
+				return;
 			} else {
-				// Fallback to external player/download
-				await FileService.downloadAndOpenFile({
-					attachment,
-					token,
-					serverId,
-					channelId,
-				});
+				// Use modal for mobile
+				setShowVideoModal(true);
 			}
 		} catch (error) {
 			console.error('Error opening video:', error);
@@ -167,59 +151,106 @@ export default function VideoAttachment({
 	// For web, we can use HTML5 video
 	if (Platform.OS === 'web' && !videoError && videoUrl) {
 		return (
-			<View style={styles.videoContainer}>
-				<View style={[{ borderColor: colors.border }, styles.videoPlayer]}>
-					<video
-						controls
-						preload="metadata"
-						style={{
-							width: '100%',
-							height: '100%',
-							borderRadius: 12,
-							backgroundColor: colors.background,
-						}}
-						onError={(e) => {
-							console.error('Video playback error:', e);
-							setVideoError(true);
-						}}
-						onLoadStart={() => {
-							console.log('Video loading started');
-						}}
-						onCanPlay={() => {
-							console.log('Video can play');
-						}}
-					>
-						<source src={videoUrl} type={attachment.fileType} />
-						Your browser does not support the video tag.
-					</video>
+			<React.Fragment>
+				<View style={styles.videoContainer}>
+					<View style={[{ borderColor: colors.border }, styles.videoPlayer]}>
+						<video
+							controls
+							preload="metadata"
+							muted={false}
+							style={{
+								width: '100%',
+								height: '100%',
+								borderRadius: 12,
+								backgroundColor: colors.background,
+							}}
+							onError={(e) => {
+								console.error('Video playback error:', e);
+								setVideoError(true);
+							}}
+							onLoadedMetadata={(e) => {
+								// Ensure video is unmuted when it loads
+								const video = e.target as HTMLVideoElement;
+								video.muted = false;
+							}}
+						>
+							<source src={videoUrl} type={attachment.fileType} />
+							Your browser does not support the video tag.
+						</video>
+					</View>
+					<Text style={[styles.fileName, { color: colors.tabIconDefault }]}>
+						{attachment.fileName} • {formatFileSize(attachment.size)}
+					</Text>
+				</View>
+				
+				<VideoViewerModal
+					visible={showVideoModal}
+					videoUrl={videoUrl}
+					fileName={attachment.fileName}
+					onClose={() => setShowVideoModal(false)}
+				/>
+			</React.Fragment>
+		);
+	}
+
+	// Show clickable placeholder for mobile or if video fails to load on web
+	if (videoError || !videoUrl) {
+		// Show error state
+		return (
+			<React.Fragment>
+				<TouchableOpacity
+					style={styles.videoContainer}
+					onPress={openVideo}
+					disabled={true}
+				>
+					<View style={[styles.videoPlaceholder, { borderColor: colors.border }]}>
+						<Text style={[styles.videoIcon, { color: colors.text }]}>🎥</Text>
+						<Text style={[styles.videoText, { color: colors.text }]}>
+							{strings.Media.Video_Preview_Failed}
+						</Text>
+					</View>
+					<Text style={[styles.fileName, { color: colors.tabIconDefault }]}>
+						{attachment.fileName} • {formatFileSize(attachment.size)}
+					</Text>
+				</TouchableOpacity>
+				
+				<VideoViewerModal
+					visible={showVideoModal}
+					videoUrl={videoUrl}
+					fileName={attachment.fileName}
+					onClose={() => setShowVideoModal(false)}
+				/>
+			</React.Fragment>
+		);
+	}
+
+	// For mobile with valid video URL, show clickable placeholder
+	return (
+		<React.Fragment>
+			<TouchableOpacity
+				style={styles.videoContainer}
+				onPress={openVideo}
+			>
+				<View style={[styles.videoPlaceholder, { borderColor: colors.border }]}>
+					<Text style={[styles.videoIcon, { color: colors.text }]}>🎥</Text>
+					<Text style={[styles.videoText, { color: colors.text }]}>
+						{strings.Media.Tap_To_Play_Video}
+					</Text>
+					<View style={styles.playButton}>
+						<Text style={styles.playIcon}>▶</Text>
+					</View>
 				</View>
 				<Text style={[styles.fileName, { color: colors.tabIconDefault }]}>
 					{attachment.fileName} • {formatFileSize(attachment.size)}
 				</Text>
-			</View>
-		);
-	}
-
-	// For mobile or if video fails to load, show clickable placeholder
-	return (
-		<TouchableOpacity
-			style={styles.videoContainer}
-			onPress={openVideo}
-		>
-			<View style={[styles.videoPlaceholder, { borderColor: colors.border }]}>
-				<Text style={[styles.videoIcon, { color: colors.text }]}>🎥</Text>
-				<Text style={[styles.videoText, { color: colors.text }]}>
-					{Platform.OS === 'web' && videoError ? 'Video Preview Failed' : 'Tap to Play Video'}
-				</Text>
-				{!videoError && (
-					<View style={styles.playButton}>
-						<Text style={styles.playIcon}>▶</Text>
-					</View>
-				)}
-			</View>
-			<Text style={[styles.fileName, { color: colors.tabIconDefault }]}>
-				{attachment.fileName} • {formatFileSize(attachment.size)}
-			</Text>
-		</TouchableOpacity>
+			</TouchableOpacity>
+			
+			<VideoViewerModal
+				visible={showVideoModal}
+				videoUrl={videoUrl}
+				fileName={attachment.fileName}
+				onClose={() => setShowVideoModal(false)}
+			/>
+		</React.Fragment>
 	);
 }

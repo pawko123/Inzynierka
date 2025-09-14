@@ -79,4 +79,5 @@ export interface MainServerSidebarProps {
 	onDirectChannelSelect?: (channel: import('@/types/sidebar').DirectChannel) => void;
 	onAddServer?: () => void;
 	onCreateDirectMessage?: () => void;
+	onJoinServer?: () => void;
 }

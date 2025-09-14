@@ -7,6 +7,7 @@ import {
 	ActivityIndicator,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useResponsive } from '@/hooks/useResponsive';
 import { Colors } from '@/constants/Colors';
 import { getStrings } from '@/i18n';
 import ChannelSection from './ChannelSection';
@@ -28,11 +29,15 @@ export default function ChannelSidebar({
 	onRetry,
 }: ChannelSidebarProps) {
 	const colorScheme = useColorScheme();
+	const { isMobile } = useResponsive();
 	const colors = Colors[colorScheme ?? 'light'];
 	const Resources = getStrings();
 
 	return (
-		<View style={[styles.channelSidebar, { backgroundColor: colors.background, borderRightColor: colors.border }]}>
+		<View style={[
+			isMobile ? styles.channelSidebarMobile : styles.channelSidebar, 
+			{ backgroundColor: colors.background, borderRightColor: colors.border }
+		]}>
 			{/* Server Header */}
 			<View style={[styles.serverHeader, { borderBottomColor: colors.border }]}>
 				<Text style={[styles.serverName, { color: colors.text }]}>
@@ -96,6 +101,10 @@ const styles = StyleSheet.create({
 	channelSidebar: {
 		width: 240,
 		borderRightWidth: 1,
+	},
+	channelSidebarMobile: {
+		flex: 1, // Take full width on mobile
+		borderRightWidth: 0, // No border on mobile
 	},
 	serverHeader: {
 		flexDirection: 'row',

@@ -284,5 +284,23 @@
 		"Delete_Message": "Usuń",
 		"Cancel": "Anuluj",
 		"Save": "Zapisz"
+	},
+	"FileDownload": {
+		"Permission_Denied": "Brak uprawnień",
+		"Media_Permission_Required": "Wymagane jest uprawnienie do biblioteki multimediów, aby zapisać pliki.",
+		"Download_Complete": "Pobieranie zakończone",
+		"File_Saved_Gallery": "został zapisany w galerii urządzenia.",
+		"File_Downloaded_Success": "został pomyślnie pobrany.",
+		"File_Downloaded": "został pobrany.",
+		"Download_Failed_Gallery": "został pobrany, ale nie można go zapisać w galerii.",
+		"Download_Failed": "Nie udało się pobrać pliku na urządzenie",
+		"Download_Error": "Nie udało się pobrać pliku",
+		"OK": "OK"
+	},
+	"Media": {
+		"Tap_To_Play_Video": "Dotknij, aby odtworzyć wideo",
+		"Video_Preview_Failed": "Podgląd wideo nie powiódł się",
+		"Tap_To_Play_Audio": "Dotknij, aby odtworzyć audio",
+		"Audio_Preview_Failed": "Podgląd audio nie powiódł się"
 	}
 }

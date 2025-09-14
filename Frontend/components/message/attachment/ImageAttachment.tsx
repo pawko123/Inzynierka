@@ -9,8 +9,9 @@ import {
 } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import FileAttachment from './FileAttachment';
-import { FileService } from '@/services/FileService';
+import ImageViewerModal from './ImageViewerModal';
 import { ImageAttachmentProps } from '@/types/message';
+import { api } from '@/services/api';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -22,30 +23,44 @@ export default function ImageAttachment({
 }: ImageAttachmentProps) {
 	const [imageError, setImageError] = useState(false);
 	const [imageUrl, setImageUrl] = useState<string>('');
+	const [showImageModal, setShowImageModal] = useState(false);
 	const { token } = useAuth();
 
 	useEffect(() => {
 		const loadImageUrl = async () => {
 			if (token) {
 				try {
-					console.log('Loading secure image URL for:', attachment.fileName, 'fileType:', attachment.fileType);
+					const params = new URLSearchParams({ channelId });
+					if (serverId && serverId.trim() !== '') {
+						params.append('serverId', serverId);
+					}
 					
-					// Use the secure URL approach that handles authorization properly
-					const secureUrl = await FileService.getSecureFileUrl(
-						attachment,
-						channelId,
-						token,
-						serverId
-					);
-					console.log('Using secure URL:', secureUrl);
-					setImageUrl(secureUrl);
+					const response = await api.get(`${attachment.url}?${params.toString()}`, {
+						responseType: 'blob'
+					});
+					
+					const blob = response.data;
+					
+					if (Platform.OS === 'web') {
+						// For web, create a blob URL
+						const blobUrl = window.URL.createObjectURL(blob);
+						setImageUrl(blobUrl);
+					} else {
+						// For mobile, convert blob to data URL
+						const reader = new FileReader();
+						reader.onload = () => {
+							const dataUrl = reader.result as string;
+							setImageUrl(dataUrl);
+						};
+						reader.readAsDataURL(blob);
+					}
 					
 				} catch (error) {
 					console.error('Error loading image URL:', error);
 					setImageError(true);
 				}
 			} else {
-				console.log('No token available for image:', attachment.fileName);
+				setImageError(true);
 			}
 		};
 
@@ -67,19 +82,8 @@ export default function ImageAttachment({
 		}
 
 		try {
-			// For images, we want to open them in a new tab/window for viewing, not download
-			if (Platform.OS === 'web') {
-				// Open the secure blob URL in a new tab for viewing
-				window.open(imageUrl, '_blank');
-			} else {
-				// For mobile, fallback to download
-				await FileService.downloadAndOpenFile({
-					attachment,
-					token,
-					serverId,
-					channelId,
-				});
-			}
+			// Use modal for both web and mobile to unify behavior
+			setShowImageModal(true);
 		} catch (error) {
 			console.error('Error opening image:', error);
 		}
@@ -115,17 +119,29 @@ export default function ImageAttachment({
 		);
 	}
 
+	console.log('ImageAttachment render: imageUrl exists:', !!imageUrl);
+
 	return (
-		<TouchableOpacity onPress={openImage} style={styles.imageContainer}>
-			<Image
-				source={{ uri: imageUrl }}
-				style={[styles.image, { borderColor: colors.border }]}
-				resizeMode="contain"
-				onError={() => setImageError(true)}
+		<React.Fragment>
+			<TouchableOpacity onPress={openImage} style={styles.imageContainer}>
+				<Image
+					source={{ uri: imageUrl }}
+					style={[styles.image, { borderColor: colors.border }]}
+					resizeMode="contain"
+					onError={() => setImageError(true)}
+				/>
+				<Text style={[styles.fileName, { color: colors.tabIconDefault }]}>
+					{attachment.fileName} • {formatFileSize(attachment.size)}
+				</Text>
+			</TouchableOpacity>
+			
+			{/* Modal will appear when showImageModal is true */}
+			<ImageViewerModal
+				visible={showImageModal}
+				imageUrl={imageUrl}
+				fileName={attachment.fileName}
+				onClose={() => setShowImageModal(false)}
 			/>
-			<Text style={[styles.fileName, { color: colors.tabIconDefault }]}>
-				{attachment.fileName} • {formatFileSize(attachment.size)}
-			</Text>
-		</TouchableOpacity>
+		</React.Fragment>
 	);
 }

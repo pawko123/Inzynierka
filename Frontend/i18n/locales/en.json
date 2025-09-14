@@ -284,5 +284,23 @@
 		"Delete_Message": "Delete",
 		"Cancel": "Cancel",
 		"Save": "Save"
+	},
+	"FileDownload": {
+		"Permission_Denied": "Permission Denied",
+		"Media_Permission_Required": "Media library permission is required to save files.",
+		"Download_Complete": "Download Complete",
+		"File_Saved_Gallery": "has been saved to your device's gallery.",
+		"File_Downloaded_Success": "has been downloaded successfully.",
+		"File_Downloaded": "has been downloaded.",
+		"Download_Failed_Gallery": "has been downloaded but could not be saved to gallery.",
+		"Download_Failed": "Failed to download file to device",
+		"Download_Error": "Failed to download file",
+		"OK": "OK"
+	},
+	"Media": {
+		"Tap_To_Play_Video": "Tap to Play Video",
+		"Video_Preview_Failed": "Video Preview Failed",
+		"Tap_To_Play_Audio": "Tap to Play Audio",
+		"Audio_Preview_Failed": "Audio Preview Failed"
 	}
 }

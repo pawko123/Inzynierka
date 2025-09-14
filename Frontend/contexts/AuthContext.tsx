@@ -60,7 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 	const register = React.useCallback(
 		async ({ username, email, password, repeatPassword }: SignUpParams) => {
-			await api.post('/auth/register', { username, email, password, repeatPassword });
+			console.log('Register request:', { username, email, password, repeatPassword });
+const response = await api.post('/auth/register', { username, email, password, repeatPassword });
+console.log('Register response:', response);
 			await signIn({ email, password });
 		},
 		[signIn]

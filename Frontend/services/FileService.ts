@@ -1,5 +1,8 @@
 import { Alert, Platform } from 'react-native';
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
 import { API_URL } from '@/constants/env';
+import { getStrings } from '@/i18n';
 
 export interface FileDownloadOptions {
 	attachment: {
@@ -53,20 +56,131 @@ export class FileService {
 				return;
 			}
 			
-			// For mobile platforms, we would use react-native-fs here
-			// Since we don't have it installed, we'll show a message for now
-			Alert.alert(
-				'Download Feature',
-				'File download with local storage will be implemented when react-native-fs is added to the project.',
-				[{ text: 'OK' }]
-			);
+			// For mobile platforms, use Expo File System to download and open files
+			await this.downloadFileToMobile(fileUrl, token, attachment);
 			
 		} catch (error) {
 			console.error('File download error:', error);
-			Alert.alert('Error', 'Failed to download file');
+			const strings = getStrings();
+			Alert.alert(
+				strings.FileDownload.Download_Error, 
+				strings.FileDownload.Download_Failed,
+				[{ text: strings.FileDownload.OK }]
+			);
 		}
 	}
-	
+
+	static async downloadFileToMobile(fileUrl: string, token: string, attachment: { fileName: string; fileType: string }): Promise<void> {
+		try {
+			const strings = getStrings();
+			
+			// Request media library permission for saving files
+			const { status } = await MediaLibrary.requestPermissionsAsync();
+			if (status !== 'granted') {
+				Alert.alert(
+					strings.FileDownload.Permission_Denied, 
+					strings.FileDownload.Media_Permission_Required,
+					[{ text: strings.FileDownload.OK }]
+				);
+				return;
+			}
+
+			// Download file to cache directory first
+			const downloadResumable = FileSystem.createDownloadResumable(
+				fileUrl,
+				FileSystem.cacheDirectory + attachment.fileName,
+				{
+					headers: {
+						'Authorization': token,
+						'Accept': '*/*',
+					}
+				},
+				(downloadProgress) => {
+					const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
+					console.log(`Download progress: ${(progress * 100).toFixed(0)}%`);
+				}
+			);
+
+			const downloadResult = await downloadResumable.downloadAsync();
+			
+			if (!downloadResult?.uri) {
+				throw new Error('Download failed - no file URI returned');
+			}
+
+			// Check if file already exists in cache
+			const fileInfo = await FileSystem.getInfoAsync(downloadResult.uri);
+			if (!fileInfo.exists) {
+				throw new Error('Downloaded file does not exist');
+			}
+
+			// Determine if this is a media file that should be saved to gallery
+			const isMediaFile = this.isMediaFile(attachment.fileType);
+			
+			if (isMediaFile) {
+				// Save media files to device gallery/photos
+				await this.saveMediaToLibrary(downloadResult.uri, attachment);
+			} else {
+				// For non-media files, offer to share or open
+				await this.handleNonMediaFile(downloadResult.uri, attachment);
+			}
+			
+		} catch (error) {
+			console.error('Mobile download error:', error);
+			const strings = getStrings();
+			Alert.alert(
+				strings.FileDownload.Download_Error, 
+				strings.FileDownload.Download_Failed,
+				[{ text: strings.FileDownload.OK }]
+			);
+		}
+	}
+
+	static isMediaFile(fileType: string): boolean {
+		const mediaTypes = ['image/', 'video/', 'audio/'];
+		return mediaTypes.some(type => fileType.toLowerCase().startsWith(type));
+	}
+
+	static async saveMediaToLibrary(fileUri: string, attachment: { fileName: string; fileType: string }): Promise<void> {
+		try {
+			const strings = getStrings();
+			// Save to media library (Photos app on iOS, Gallery on Android)
+			await MediaLibrary.createAssetAsync(fileUri);
+			
+			Alert.alert(
+				strings.FileDownload.Download_Complete,
+				`${attachment.fileName} ${strings.FileDownload.File_Saved_Gallery}`,
+				[{ text: strings.FileDownload.OK }]
+			);
+		} catch (error) {
+			console.error('Error saving to media library:', error);
+			const strings = getStrings();
+			Alert.alert(
+				strings.FileDownload.Download_Complete, 
+				`${attachment.fileName} ${strings.FileDownload.Download_Failed_Gallery}`,
+				[{ text: strings.FileDownload.OK }]
+			);
+		}
+	}
+
+	static async handleNonMediaFile(fileUri: string, attachment: { fileName: string; fileType: string }): Promise<void> {
+		try {
+			const strings = getStrings();
+			Alert.alert(
+				strings.FileDownload.Download_Complete,
+				`${attachment.fileName} ${strings.FileDownload.File_Downloaded_Success}`,
+				[{ text: strings.FileDownload.OK }]
+			);
+		} catch (error) {
+			console.error('Error handling non-media file:', error);
+			const strings = getStrings();
+			Alert.alert(
+				strings.FileDownload.Download_Complete, 
+				`${attachment.fileName} ${strings.FileDownload.File_Downloaded}`,
+				[{ text: strings.FileDownload.OK }]
+			);
+		}
+	}
+
 	static async downloadFileWeb(fileUrl: string, token: string, fileName: string): Promise<void> {
 		try {
 			// Fetch file with proper authorization headers
@@ -96,7 +210,12 @@ export class FileService {
 			
 		} catch (error) {
 			console.error('Web download error:', error);
-			Alert.alert('Error', 'Failed to download file');
+			const strings = getStrings();
+			Alert.alert(
+				strings.FileDownload.Download_Error, 
+				strings.FileDownload.Download_Failed,
+				[{ text: strings.FileDownload.OK }]
+			);
 		}
 	}
 	

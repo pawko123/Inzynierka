@@ -22,21 +22,23 @@ export default function ChannelSection({
 	const colors = Colors[colorScheme ?? 'light'];
 	const Resources = getStrings();
 
-	const renderChannelItem = ({ item }: { item: Channel }) => (
-		<TouchableOpacity
-			style={[styles.channelItem, { backgroundColor: colors.background }]}
-			onPress={() => onChannelPress(item)}
-		>
-			<View style={styles.channelIcon}>
-				<Text style={[styles.channelIconText, { color: colors.text }]}>
-					{item.type === 'voice' ? '🔊' : '#'}
+	const renderChannelItem = ({ item }: { item: Channel }) => {
+		return (
+			<TouchableOpacity
+				style={[styles.channelItem, { backgroundColor: colors.background }]}
+				onPress={() => onChannelPress(item)}
+			>
+				<View style={styles.channelIcon}>
+					<Text style={[styles.channelIconText, { color: colors.text }]}>
+						{item.type === 'voice' ? '🔊' : '#'}
+					</Text>
+				</View>
+				<Text style={[styles.channelName, { color: colors.text }]}>
+					{item.name}
 				</Text>
-			</View>
-			<Text style={[styles.channelName, { color: colors.text }]}>
-				{item.name}
-			</Text>
-		</TouchableOpacity>
-	);
+			</TouchableOpacity>
+		);
+	};
 
 	const renderEmptyState = () => (
 		<View style={styles.emptyState}>
@@ -109,6 +111,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 8,
 		borderRadius: 4,
 		marginBottom: 1,
+		minHeight: 32, // Ensure minimum height
 	},
 	channelIcon: {
 		width: 16,

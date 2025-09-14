@@ -1,11 +1,13 @@
 import { useRouter } from 'expo-router';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { ServerSidebar, ServerContent, JoinServerModal } from '@/components/server';
+import type { ServerSidebarRef } from '@/components/server';
 import WelcomeScreen from '@/components/WelcomeScreen';
 import { ChannelChat } from '@/components/channel';
 import CreateModal, { CreateType } from '@/components/CreateModal';
+import { api } from '@/services/api';
 import type { Server, DirectChannel } from '@/types/sidebar';
 
 function GuardedTabs({ children }: { children: React.ReactNode }) {
@@ -24,6 +26,7 @@ function GuardedTabs({ children }: { children: React.ReactNode }) {
 }
 
 export default function TabLayout() {
+	const sidebarRef = useRef<ServerSidebarRef>(null);
 	const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
 	const [isJoinServerModalVisible, setIsJoinServerModalVisible] = useState(false);
 	const [createModalType, setCreateModalType] = useState<CreateType>('server');
@@ -68,27 +71,45 @@ export default function TabLayout() {
 
 	const handleServerCreation = (data: any) => {
 		console.log('Server created:', data);
-		// TODO: Refresh sidebar or update context with new server
+		// Add the newly created server to the sidebar
+		if (sidebarRef.current && data) {
+			sidebarRef.current.addServer(data);
+		}
 	};
 
 	const handleDirectChannelCreation = (data: any) => {
 		console.log('Direct channel created:', data);
-		// TODO: Refresh sidebar or update context with new channel
+		// Add the newly created direct channel to the sidebar
+		if (sidebarRef.current && data) {
+			sidebarRef.current.addDirectChannel(data);
+		}
 	};
 
-	const handleServerJoined = (data: any) => {
+	const handleServerJoined = async (data: any) => {
 		console.log('Joined server:', data);
-		// TODO: Refresh sidebar or update context with joined server
+		// For joined servers, we need to fetch the full server data and add it
+		if (sidebarRef.current && data?.serverId) {
+			try {
+				const { data: serverData } = await api.get(`/server/getServer?serverId=${data.serverId}`);
+				sidebarRef.current.addServer(serverData);
+			} catch (error) {
+				console.error('Failed to fetch joined server data:', error);
+				// Fallback: refresh the entire sidebar
+				sidebarRef.current.refreshData();
+			}
+		}
 	};
 
 	return (
 		<GuardedTabs>
 			<View style={styles.container}>
 				<ServerSidebar 
+					ref={sidebarRef}
 					onServerSelect={handleServerSelect}
 					onDirectChannelSelect={handleDirectChannelSelect}
 					onAddServer={handleCreateServer}
 					onCreateDirectMessage={handleCreateDirectChannel}
+					onJoinServer={handleJoinServer}
 				/>
 				<View style={styles.mainContent}>
 					{selectedServerId ? (
