@@ -27,6 +27,7 @@ import { ChannelChatProps } from '@/types/server';
 import { Message } from '@/types/message';
 import MessageItem from '../message/MessageItem';
 import MessageInput from '../message/MessageInput';
+import VoiceChannelInterface from './VoiceChannelInterface';
 
 export default function ChannelChat({ channel, serverId }: ChannelChatProps) {
 	const colorScheme = useColorScheme();
@@ -416,30 +417,40 @@ export default function ChannelChat({ channel, serverId }: ChannelChatProps) {
 				</Text>
 			</View>
 
-			{/* Messages List */}
-			<FlatList
-				ref={flatListRef}
-				data={messages}
-				renderItem={renderMessage}
-				keyExtractor={(item) => item.messageId}
-				style={styles.messagesList}
-				contentContainerStyle={styles.messagesContainer}
-				ListFooterComponent={renderHeader}
-				inverted={true}
-				showsVerticalScrollIndicator={false}
-				initialNumToRender={10}
-				maxToRenderPerBatch={10}
-				windowSize={10}
-			/>
+			{/* Voice Channel Interface or Text Messages */}
+			{channel.type === 'voice' ? (
+				<VoiceChannelInterface 
+					channelId={channel.id}
+					channelName={channel.name}
+				/>
+			) : (
+				<>
+					{/* Messages List */}
+					<FlatList
+						ref={flatListRef}
+						data={messages}
+						renderItem={renderMessage}
+						keyExtractor={(item) => item.messageId}
+						style={styles.messagesList}
+						contentContainerStyle={styles.messagesContainer}
+						ListFooterComponent={renderHeader}
+						inverted={true}
+						showsVerticalScrollIndicator={false}
+						initialNumToRender={10}
+						maxToRenderPerBatch={10}
+						windowSize={10}
+					/>
 
-			{/* Message Input */}
-			<MessageInput
-				onSendMessage={sendMessage}
-				disabled={sending}
-				colors={colors}
-				placeholder={`${getStrings().Chat.Message_Placeholder} #${channel.name}`}
-				channelId={channel.id}
-			/>
+					{/* Message Input */}
+					<MessageInput
+						onSendMessage={sendMessage}
+						disabled={sending}
+						colors={colors}
+						placeholder={`${getStrings().Chat.Message_Placeholder} #${channel.name}`}
+						channelId={channel.id}
+					/>
+				</>
+			)}
 		</KeyboardAvoidingView>
 	);
 }

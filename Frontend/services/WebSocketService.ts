@@ -198,6 +198,14 @@ class WebSocketService {
 		}
 	}
 
+	emitToServer(event: string, data: any) {
+		if (this.socket && this.socket.connected) {
+			this.socket.emit(event, data);
+		} else {
+			console.warn('Cannot emit event: WebSocket not connected');
+		}
+	}
+
 	// Disconnect from WebSocket
 	disconnect() {
 		if (this.socket) {

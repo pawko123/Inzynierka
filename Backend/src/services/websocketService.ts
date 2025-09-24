@@ -2,30 +2,16 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { AppDataSource } from '../config/data-source';
 import { User } from '../models/User';
-
+import {
+	JoinChannelData,
+	VoiceChannelJoinData,
+	VoiceChannelLeaveData,
+	VoiceUserUpdateData,
+	WebRTCSignalData
+} from '../types/websocket';
 interface AuthenticatedSocket extends Socket {
 	userId?: string;
 	user?: User;
-}
-
-interface JoinChannelData {
-	channelId: string;
-	serverId?: string;
-}
-
-interface SendMessageData {
-	channelId: string;
-	content: string;
-	serverId?: string;
-}
-
-interface MessageUpdateData {
-	messageId: string;
-	content: string;
-}
-
-interface MessageDeleteData {
-	messageId: string;
 }
 
 export const initializeWebSocket = (io: SocketIOServer) => {
@@ -108,9 +94,93 @@ export const initializeWebSocket = (io: SocketIOServer) => {
 			});
 		});
 
-		// Handle disconnection
+		socket.on('join-voice-channel', (data: VoiceChannelJoinData) => {
+			const voiceRoomName = `voice:${data.channelId}`;
+			socket.join(voiceRoomName);
+			console.log(`User ${socket.user?.username} joined voice channel: ${data.channelId}`);
+
+			const voiceUserData = {
+				userId: socket.userId!,
+				username: socket.user?.username || 'Unknown',
+				isMuted: data.isMuted || false,
+				isCameraOn: data.isCameraOn || false,
+			};
+
+			socket.to(voiceRoomName).emit('voice-user-joined', voiceUserData);
+		});
+
+		socket.on('leave-voice-channel', (data: VoiceChannelLeaveData) => {
+			const voiceRoomName = `voice:${data.channelId}`;
+			console.log(`User ${socket.user?.username} left voice channel: ${data.channelId}`);
+
+			socket.to(voiceRoomName).emit('voice-user-left', {
+				userId: socket.userId,
+			});
+
+			socket.leave(voiceRoomName);
+		});
+
+		socket.on('voice-user-update', (data: VoiceUserUpdateData) => {
+			const voiceRoomName = `voice:${data.channelId}`;
+			console.log(`User ${socket.user?.username} updated voice state in channel: ${data.channelId}`);
+
+			const updateData = {
+				userId: socket.userId,
+				...data,
+			};
+
+			socket.to(voiceRoomName).emit('voice-user-updated', updateData);
+		});
+
+		socket.on('webrtc-offer', (data: WebRTCSignalData) => {
+			console.log(`WebRTC offer from ${socket.userId} to ${data.targetUserId} in channel ${data.channelId}`);
+			
+			io.sockets.sockets.forEach((targetSocket: AuthenticatedSocket) => {
+				if (targetSocket.userId === data.targetUserId) {
+					targetSocket.emit('webrtc-offer', {
+						fromUserId: socket.userId,
+						offer: data.offer,
+					});
+				}
+			});
+		});
+
+		socket.on('webrtc-answer', (data: WebRTCSignalData) => {
+			console.log(`WebRTC answer from ${socket.userId} to ${data.targetUserId} in channel ${data.channelId}`);
+			
+			io.sockets.sockets.forEach((targetSocket: AuthenticatedSocket) => {
+				if (targetSocket.userId === data.targetUserId) {
+					targetSocket.emit('webrtc-answer', {
+						fromUserId: socket.userId,
+						answer: data.answer,
+					});
+				}
+			});
+		});
+
+		socket.on('webrtc-ice-candidate', (data: WebRTCSignalData) => {
+			console.log(`WebRTC ICE candidate from ${socket.userId} to ${data.targetUserId} in channel ${data.channelId}`);
+			
+			io.sockets.sockets.forEach((targetSocket: AuthenticatedSocket) => {
+				if (targetSocket.userId === data.targetUserId) {
+					targetSocket.emit('webrtc-ice-candidate', {
+						fromUserId: socket.userId,
+						candidate: data.candidate,
+					});
+				}
+			});
+		});
+
 		socket.on('disconnect', () => {
 			console.log(`User ${socket.user?.username} disconnected from socket ID: ${socket.id}`);
+			
+			io.sockets.sockets.forEach((otherSocket: AuthenticatedSocket) => {
+				if (otherSocket.id !== socket.id) {
+					otherSocket.emit('voice-user-left', {
+						userId: socket.userId,
+					});
+				}
+			});
 		});
 	});
 

@@ -303,5 +303,20 @@
 		"Video_Preview_Failed": "Video Preview Failed",
 		"Tap_To_Play_Audio": "Tap to Play Audio",
 		"Audio_Preview_Failed": "Audio Preview Failed"
+	},
+	"WebRTC": {
+		"Join_Call": "Join Call",
+		"Voice_Participants": "Voice Participants",
+		"Error": "Error",
+		"Failed_To_Join": "Failed to join voice channel",
+		"Connection_Error": "Connection error occurred",
+		"Media_Access_Error": "Unable to access microphone or camera",
+		"Network_Error": "Network connection failed",
+		"Permission_Denied": "Microphone or camera permission denied",
+		"Loading": "Loading...",
+		"Video_Unavailable": "Video unavailable",
+		"Module_Not_Available": "WebRTC is not available on this device",
+		"Media_Devices_Not_Available": "Audio/video devices are not available",
+		"Module_Load_Failed": "Failed to initialize voice/video calling"
 	}
 }

@@ -18,6 +18,12 @@ export class VoiceState {
 
 	@Column({ default: false })
 	isDeafened: boolean;
+	
+	@Column({ default: false })
+	isCameraOn: boolean;
+
+	@Column({ default: false })
+	isScreenSharing: boolean;
 
 	@CreateDateColumn()
 	joinedAt: Date;

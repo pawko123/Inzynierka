@@ -303,5 +303,20 @@
 		"Video_Preview_Failed": "Podgląd wideo nie powiódł się",
 		"Tap_To_Play_Audio": "Dotknij, aby odtworzyć audio",
 		"Audio_Preview_Failed": "Podgląd audio nie powiódł się"
+	},
+	"WebRTC": {
+		"Join_Call": "Dołącz do rozmowy",
+		"Voice_Participants": "Uczestnicy głosowi",
+		"Error": "Błąd",
+		"Failed_To_Join": "Nie udało się dołączyć do kanału głosowego",
+		"Connection_Error": "Wystąpił błąd połączenia",
+		"Media_Access_Error": "Nie można uzyskać dostępu do mikrofonu lub kamery",
+		"Network_Error": "Połączenie sieciowe nie powiodło się",
+		"Permission_Denied": "Odmowa dostępu do mikrofonu lub kamery",
+		"Loading": "Ładowanie...",
+		"Video_Unavailable": "Wideo niedostępne",
+		"Module_Not_Available": "WebRTC nie jest dostępne na tym urządzeniu",
+		"Media_Devices_Not_Available": "Urządzenia audio/wideo nie są dostępne",
+		"Module_Load_Failed": "Nie udało się zainicjować połączeń głosowych/wideo"
 	}
 }
