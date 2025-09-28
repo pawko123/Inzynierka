@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Platform, PermissionsAndroid } from 'react-native';
 import { webSocketService } from './WebSocketService';
 import {
 	VoiceUser,
@@ -25,12 +25,14 @@ if (Platform.OS !== 'web') {
 class WebRTCService {
 	private channelId: string | null = null;
 	private localStream: MediaStream | null = null;
+	private remoteStreams: Map<string, MediaStream> = new Map();
 	private peerConnections: Map<string, RTCPeerConnection> = new Map();
 	private connectedUsers: Map<string, VoiceUser> = new Map();
 	private callbacks: WebRTCCallbacks | null = null;
 	private isInCall = false;
 	private isMuted = false;
 	private isCameraOn = false;
+	private status = 'idle';
 	
 	private readonly iceServers: RTCIceServer[] = [
 		{ urls: 'stun:stun.l.google.com:19302' },
@@ -41,63 +43,232 @@ class WebRTCService {
 		this.setupWebSocketListeners();
 	}
 
-	private setupWebSocketListeners(): void {
-		webSocketService.on('webrtc-offer', this.handleOffer.bind(this));
-		webSocketService.on('webrtc-answer', this.handleAnswer.bind(this));
-		webSocketService.on('webrtc-ice-candidate', this.handleIceCandidate.bind(this));
-		webSocketService.on('voice-user-joined', this.handleUserJoined.bind(this));
-		webSocketService.on('voice-user-left', this.handleUserLeft.bind(this));
-		webSocketService.on('voice-user-updated', this.handleUserUpdated.bind(this));
+	// Request Android runtime permissions
+	private async requestPermissions(): Promise<boolean> {
+		if (Platform.OS === "android") {
+			try {
+				const granted = await PermissionsAndroid.requestMultiple([
+					PermissionsAndroid.PERMISSIONS.CAMERA,
+					PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+				]);
+
+				const camGranted =
+					granted["android.permission.CAMERA"] ===
+					PermissionsAndroid.RESULTS.GRANTED;
+				const micGranted =
+					granted["android.permission.RECORD_AUDIO"] ===
+					PermissionsAndroid.RESULTS.GRANTED;
+
+				if (!camGranted || !micGranted) {
+					console.log("Permissions denied");
+					return false;
+				}
+				return true;
+			} catch (err) {
+				console.warn("Permission error", err);
+				return false;
+			}
+		}
+		return true;
 	}
 
-	async joinVoiceChannel(channelId: string, callbacks: WebRTCCallbacks): Promise<void> {
-		try {
-			this.channelId = channelId;
-			this.callbacks = callbacks;
-			this.isInCall = true;
+	// Get local media stream
+	private async getLocalStream(): Promise<void> {
+		const ok = await this.requestPermissions();
+		if (!ok) {
+			throw new Error('Permissions denied');
+		}
 
-			await this.initializeLocalStream();
+		const constraints: MediaStreamConstraints = {
+			audio: true,
+			video: this.isCameraOn ? { facingMode: "user" } : false,
+		};
 
-			if (webSocketService.isConnected()) {
-				const joinData: VoiceChannelJoinData = {
-					channelId,
-					isMuted: this.isMuted,
-					isCameraOn: this.isCameraOn,
+		this.localStream = await this.getUserMedia(constraints);
+		this.setStatus('local stream ready');
+	}
+
+	private setStatus(newStatus: string): void {
+		this.status = newStatus;
+		console.log('WebRTC Status:', newStatus);
+	}
+
+	private setupWebSocketListeners(): void {
+		console.log('Setting up WebSocket listeners for WebRTC');
+		
+		// Add debugging wrapper for each event
+		webSocketService.on('webrtc-offer', (data) => {
+			console.log('WebRTC Service received webrtc-offer event:', {
+				fromUserId: data?.fromUserId,
+				offerType: data?.offer?.type
+			});
+			this.handleOffer(data);
+		});
+		
+		webSocketService.on('webrtc-answer', (data) => {
+			console.log('WebRTC Service received webrtc-answer event:', {
+				fromUserId: data?.fromUserId,
+				answerType: data?.answer?.type
+			});
+			this.handleAnswer(data);
+		});
+		
+		webSocketService.on('webrtc-ice-candidate', (data) => {
+			console.log('WebRTC Service received webrtc-ice-candidate event:', {
+				fromUserId: data?.fromUserId,
+				candidateType: data?.candidate?.candidate ? 'valid' : 'empty'
+			});
+			this.handleIceCandidate(data);
+		});
+		
+		webSocketService.on('voice-user-joined', (data) => {
+			console.log('WebRTC Service received voice-user-joined event:', {
+				userId: data?.userId,
+				username: data?.username
+			});
+			this.handleUserJoined(data);
+		});
+		
+		webSocketService.on('voice-user-left', (data) => {
+			console.log('WebRTC Service received voice-user-left event:', {
+				userId: data?.userId
+			});
+			this.handleUserLeft(data);
+		});
+		
+		webSocketService.on('voice-user-updated', (data) => {
+			console.log('WebRTC Service received voice-user-updated event:', {
+				userId: data?.userId,
+				isMuted: data?.isMuted,
+				isCameraOn: data?.isCameraOn
+			});
+			this.handleUserUpdated(data);
+		});
+		
+		// Add listeners for debugging
+		webSocketService.on('connect', () => {
+			console.log('WebSocket connected for WebRTC');
+		});
+		
+		webSocketService.on('disconnect', () => {
+			console.log('WebSocket disconnected for WebRTC');
+		});
+	}
+
+	// Create or get existing peer connection
+	private ensurePeer(userId: string): RTCPeerConnection {
+		// Always check if we already have a peer connection for this user
+		const existingPc = this.peerConnections.get(userId);
+		if (existingPc) {
+			console.log(`Reusing existing peer connection for user ${userId}, state: ${existingPc.connectionState}`);
+			return existingPc;
+		}
+
+		const RTCPeerConnectionClass = Platform.OS === 'web' 
+			? window.RTCPeerConnection 
+			: webRTCModule?.RTCPeerConnection;
+
+		if (!RTCPeerConnectionClass) {
+			throw new Error('RTCPeerConnection not available');
+		}
+
+		console.log(`Creating new peer connection for user ${userId}`);
+		const pc = new RTCPeerConnectionClass({ iceServers: this.iceServers }) as RTCPeerConnection;
+
+		pc.onicecandidate = (event: any) => {
+			if (event.candidate && webSocketService.isConnected() && this.channelId) {
+				console.log(`Sending ICE candidate to ${userId}`);
+				const signalData: WebRTCSignalData = {
+					channelId: this.channelId,
+					targetUserId: userId,
+					candidate: event.candidate,
 				};
-				webSocketService.emitToServer('join-voice-channel', joinData);
-
-				// Notify callback about local stream
-				if (this.localStream) {
-					this.callbacks.onStreamReceived('local', this.localStream);
-				}
-
-				// Get existing users in the channel and establish connections
-				await this.connectToExistingUsers(channelId);
+				webSocketService.emitToServer('webrtc-ice-candidate', signalData);
 			}
-		} catch (error) {
-			console.error('Error joining voice channel:', error);
-			this.callbacks?.onError(`Failed to join voice channel: ${error instanceof Error ? error.message : String(error)}`);
+		};
+
+		pc.ontrack = (event: any) => {
+			console.log('Received remote stream from', userId);
+			const [stream] = event.streams;
+			this.remoteStreams.set(userId, stream);
+			this.callbacks?.onStreamReceived(userId, stream);
+			
+			const user = this.connectedUsers.get(userId);
+			if (user) {
+				user.stream = stream;
+				this.connectedUsers.set(userId, user);
+			}
+		};
+
+		pc.onconnectionstatechange = () => {
+			console.log(`Peer connection state with ${userId}:`, pc.connectionState);
+			if (pc.connectionState === 'connected') {
+				this.setStatus(`connected to ${userId}`);
+			} else if (pc.connectionState === 'failed') {
+				console.log(`Peer connection failed with ${userId}, removing connection`);
+				this.peerConnections.delete(userId);
+				this.remoteStreams.delete(userId);
+			}
+		};
+
+		// Add local stream tracks if available
+		if (this.localStream) {
+			this.localStream.getTracks().forEach((track) => {
+				if (this.localStream) {
+					console.log(`Adding ${track.kind} track to peer connection for ${userId}`);
+					(pc as any).addTrack(track, this.localStream);
+				}
+			});
+		}
+
+		this.peerConnections.set(userId, pc);
+		return pc;
+	}
+
+	private cleanup(): void {
+		this.peerConnections.forEach((pc) => {
+			pc.close();
+		});
+		this.peerConnections.clear();
+		this.remoteStreams.clear();
+		this.connectedUsers.clear();
+		
+		if (this.localStream) {
+			this.localStream.getTracks().forEach((track) => track.stop());
+			this.localStream = null;
+		}
+
+		this.channelId = null;
+		this.isInCall = false;
+		this.setStatus('idle');
+	}
+
+	private async getUserMedia(constraints: MediaStreamConstraints): Promise<MediaStream> {
+		if (Platform.OS === 'web') {
+			if (!navigator.mediaDevices?.getUserMedia) {
+				throw new Error('getUserMedia not available on this platform');
+			}
+			return navigator.mediaDevices.getUserMedia(constraints);
+		} else {
+			if (!webRTCModule?.mediaDevices?.getUserMedia) {
+				throw new Error('getUserMedia not available on this platform');
+			}
+			return webRTCModule.mediaDevices.getUserMedia(constraints as any) as unknown as Promise<MediaStream>;
 		}
 	}
 
 	private async connectToExistingUsers(channelId: string): Promise<void> {
 		try {
-			// Import API service
 			const { api } = await import('@/services/api');
-			
-			// Get existing users in the voice channel
 			const response = await api.get(`/voice-state/channel-users?channelId=${channelId}`);
 			const existingUsers = response.data;
 			
 			console.log(`Found ${existingUsers.length} existing users in voice channel`);
 			
-			// Get current user ID to avoid creating connection with self
-			// We need to get this from storage or auth context
 			const { storage } = await import('@/utils/storage');
 			const userData = await storage.getItem('user');
 			const currentUserId = userData ? JSON.parse(userData).id : null;
 			
-			// Create peer connections with existing users (excluding self)
 			for (const userData of existingUsers) {
 				if (currentUserId && userData.userId === currentUserId) {
 					console.log('Skipping self connection for user', userData.userId);
@@ -115,7 +286,7 @@ class WebRTCService {
 				this.callbacks?.onUserJoined(voiceUser);
 				
 				// Create peer connection and send offer
-				const pc = this.createPeerConnection(userData.userId);
+				const pc = this.ensurePeer(userData.userId);
 				const offer = await pc.createOffer();
 				await pc.setLocalDescription(offer);
 
@@ -126,12 +297,50 @@ class WebRTCService {
 						targetUserId: userData.userId,
 						offer: offer,
 					};
+					console.log('Emitting webrtc-offer with data:', {
+						channelId: signalData.channelId,
+						targetUserId: signalData.targetUserId,
+						offerType: signalData.offer?.type
+					});
 					webSocketService.emitToServer('webrtc-offer', signalData);
 				}
 			}
 		} catch (error) {
 			console.error('Error connecting to existing users:', error);
-			// Don't throw - this shouldn't prevent joining the channel
+		}
+	}
+
+	// Public methods
+	async joinVoiceChannel(channelId: string, callbacks: WebRTCCallbacks): Promise<void> {
+		try {
+			this.channelId = channelId;
+			this.callbacks = callbacks;
+			this.isInCall = true;
+			this.setStatus('joining channel...');
+
+			await this.getLocalStream();
+
+			if (webSocketService.isConnected()) {
+				const joinData: VoiceChannelJoinData = {
+					channelId,
+					isMuted: this.isMuted,
+					isCameraOn: this.isCameraOn,
+				};
+				webSocketService.emitToServer('join-voice-channel', joinData);
+				this.setStatus('socket connected');
+
+				// Notify callback about local stream
+				if (this.localStream) {
+					this.callbacks.onStreamReceived('local', this.localStream);
+				}
+
+				// Connect to existing users in the channel
+				await this.connectToExistingUsers(channelId);
+			}
+		} catch (error) {
+			console.error('Error joining voice channel:', error);
+			this.callbacks?.onError(`Failed to join voice channel: ${error instanceof Error ? error.message : String(error)}`);
+			this.cleanup();
 		}
 	}
 
@@ -141,20 +350,7 @@ class WebRTCService {
 				const leaveData: VoiceChannelLeaveData = { channelId: this.channelId };
 				webSocketService.emitToServer('leave-voice-channel', leaveData);
 			}
-
-			this.peerConnections.forEach((pc) => {
-				pc.close();
-			});
-			this.peerConnections.clear();
-			this.connectedUsers.clear();
-
-			if (this.localStream) {
-				this.localStream.getTracks().forEach((track) => track.stop());
-				this.localStream = null;
-			}
-
-			this.channelId = null;
-			this.isInCall = false;
+			this.cleanup();
 		} catch (error) {
 			console.error('Error leaving voice channel:', error);
 		}
@@ -168,6 +364,7 @@ class WebRTCService {
 			if (audioTrack) {
 				audioTrack.enabled = this.isMuted;
 				this.isMuted = !this.isMuted;
+				this.setStatus(this.isMuted ? 'muted' : 'unmuted');
 
 				if (webSocketService.isConnected() && this.channelId) {
 					const updateData: VoiceUserUpdateData = {
@@ -189,31 +386,54 @@ class WebRTCService {
 
 		try {
 			this.isCameraOn = !this.isCameraOn;
+			this.setStatus(this.isCameraOn ? 'camera on' : 'camera off');
 
-			// If turning camera on and we don't have video track, add it
-			if (this.isCameraOn) {
-				if (!this.localStream || this.localStream.getVideoTracks().length === 0) {
-					await this.addVideoTrack();
-				} else {
-					// Enable existing video track
-					const videoTrack = this.localStream.getVideoTracks()[0];
-					if (videoTrack) {
-						videoTrack.enabled = true;
+			// Re-initialize stream with new video constraint
+			const constraints: MediaStreamConstraints = {
+				audio: true,
+				video: this.isCameraOn ? { facingMode: "user" } : false,
+			};
+
+			// Stop current stream
+			if (this.localStream) {
+				this.localStream.getTracks().forEach((track) => track.stop());
+			}
+
+			// Get new stream
+			this.localStream = await this.getUserMedia(constraints);
+
+			// Update all peer connections with new tracks
+			for (const [userId, pc] of this.peerConnections) {
+				// Remove old senders
+				const senders = pc.getSenders();
+				for (const sender of senders) {
+					if (sender.track) {
+						pc.removeTrack(sender);
 					}
 				}
-			} else {
-				// Disable video track but don't remove it
+
+				// Add new tracks
 				if (this.localStream) {
-					const videoTrack = this.localStream.getVideoTracks()[0];
-					if (videoTrack) {
-						videoTrack.enabled = false;
-					}
+					this.localStream.getTracks().forEach((track) => {
+						(pc as any).addTrack(track, this.localStream!);
+					});
+				}
+
+				// Create new offer to update the connection
+				const offer = await pc.createOffer();
+				await pc.setLocalDescription(offer);
+
+				if (webSocketService.isConnected() && this.channelId) {
+					const signalData: WebRTCSignalData = {
+						channelId: this.channelId,
+						targetUserId: userId,
+						offer: offer,
+					};
+					webSocketService.emitToServer('webrtc-offer', signalData);
 				}
 			}
 
-			// Update all peer connections
-			await this.updatePeerConnectionTracks();
-
+			// Update server about camera state
 			if (webSocketService.isConnected() && this.channelId) {
 				const updateData: VoiceUserUpdateData = {
 					channelId: this.channelId,
@@ -235,194 +455,12 @@ class WebRTCService {
 		}
 	}
 
-	private async getUserMedia(constraints: MediaStreamConstraints): Promise<MediaStream> {
-		if (Platform.OS === 'web') {
-			if (!navigator.mediaDevices?.getUserMedia) {
-				throw new Error('getUserMedia not available on this platform');
-			}
-			return navigator.mediaDevices.getUserMedia(constraints);
-		} else {
-			if (!webRTCModule?.mediaDevices?.getUserMedia) {
-				throw new Error('getUserMedia not available on this platform');
-			}
-			return webRTCModule.mediaDevices.getUserMedia(constraints as any) as unknown as Promise<MediaStream>;
-		}
-	}
-
-	private async initializeLocalStream(): Promise<void> {
-		try {
-			const constraints: MediaStreamConstraints = {
-				audio: true,
-				video: this.isCameraOn,
-			};
-			this.localStream = await this.getUserMedia(constraints);
-		} catch (error) {
-			console.error('Error initializing local stream:', error);
-			// Fallback to audio-only if video fails
-			if (this.isCameraOn) {
-				try {
-					this.isCameraOn = false;
-					const constraints: MediaStreamConstraints = {
-						audio: true,
-						video: false,
-					};
-					this.localStream = await this.getUserMedia(constraints);
-				} catch (audioError) {
-					throw new Error(`Failed to initialize even audio stream: ${audioError instanceof Error ? audioError.message : String(audioError)}`);
-				}
-			} else {
-				throw error;
-			}
-		}
-	}
-
-	private async addVideoTrack(): Promise<void> {
-		if (!this.localStream) return;
-
-		try {
-			const videoStream = await this.getUserMedia({ video: true, audio: false });
-			const videoTrack = videoStream.getVideoTracks()[0];
-			if (videoTrack) {
-				this.localStream.addTrack(videoTrack);
-			}
-		} catch (error) {
-			console.error('Error adding video track:', error);
-			throw error;
-		}
-	}
-
-	private async updatePeerConnectionTracks(): Promise<void> {
-		if (!this.localStream) return;
-
-		for (const [userId, pc] of this.peerConnections) {
-			try {
-				// Get current senders
-				const senders = pc.getSenders();
-				
-				// Handle video track
-				const videoTrack = this.localStream.getVideoTracks()[0];
-				const videoSender = senders.find(s => s.track?.kind === 'video');
-				
-				if (videoTrack && this.isCameraOn) {
-					if (videoSender) {
-						// Replace existing video track
-						await videoSender.replaceTrack(videoTrack);
-					} else {
-						// Add new video track
-						pc.addTrack(videoTrack, this.localStream);
-					}
-				} else if (videoSender && videoSender.track) {
-					// Remove video track
-					await videoSender.replaceTrack(null);
-				}
-
-				// Handle audio track (should always be present)
-				const audioTrack = this.localStream.getAudioTracks()[0];
-				const audioSender = senders.find(s => s.track?.kind === 'audio');
-				
-				if (audioTrack) {
-					if (audioSender) {
-						await audioSender.replaceTrack(audioTrack);
-					} else {
-						pc.addTrack(audioTrack, this.localStream);
-					}
-				}
-			} catch (error) {
-				console.error(`Error updating peer connection tracks for user ${userId}:`, error);
-			}
-		}
-	}
-
-	private async initializeLocalAudioStream(): Promise<void> {
-		this.localStream = await this.getUserMedia({
-			audio: true,
-			video: false,
-		});
-	}
-
-	private createPeerConnection(userId: string): RTCPeerConnection {
-		// Check if peer connection already exists
-		if (this.peerConnections.has(userId)) {
-			console.log(`Peer connection already exists for user ${userId}`);
-			return this.peerConnections.get(userId)!;
-		}
-
-		const RTCPeerConnectionClass = Platform.OS === 'web' 
-			? window.RTCPeerConnection 
-			: webRTCModule?.RTCPeerConnection;
-
-		if (!RTCPeerConnectionClass) {
-			throw new Error('RTCPeerConnection not available');
-		}
-
-		console.log(`Creating new peer connection for user ${userId}`);
-		const pc = new RTCPeerConnectionClass({ iceServers: this.iceServers }) as RTCPeerConnection;
-
-		pc.onicecandidate = (event: any) => {
-			if (event.candidate && webSocketService.isConnected() && this.channelId) {
-				console.log(`Sending ICE candidate to ${userId}:`, event.candidate);
-				const signalData: WebRTCSignalData = {
-					channelId: this.channelId,
-					targetUserId: userId,
-					candidate: event.candidate,
-				};
-				webSocketService.emitToServer('webrtc-ice-candidate', signalData);
-			}
-		};
-
-		pc.onconnectionstatechange = () => {
-			console.log(`Peer connection state with ${userId}:`, pc.connectionState);
-		};
-
-		pc.oniceconnectionstatechange = () => {
-			console.log(`ICE connection state with ${userId}:`, pc.iceConnectionState);
-		};
-
-		pc.ontrack = (event: any) => {
-			console.log('Received remote stream from', userId);
-			const remoteStream = event.streams[0];
-			this.callbacks?.onStreamReceived(userId, remoteStream);
-			
-			const user = this.connectedUsers.get(userId);
-			if (user) {
-				user.stream = remoteStream;
-				this.connectedUsers.set(userId, user);
-			}
-		};
-
-		// Add local stream tracks
-		if (this.localStream) {
-			this.localStream.getTracks().forEach((track) => {
-				if (this.localStream) {
-					console.log(`Adding ${track.kind} track to peer connection for user ${userId}`);
-					(pc as any).addTrack(track, this.localStream);
-				}
-			});
-		}
-
-		this.peerConnections.set(userId, pc);
-		return pc;
-	}
-
-	private async ensureWebRTCModule(): Promise<void> {
-		// Simple check to ensure webRTC module is available
-		if (Platform.OS !== 'web' && !webRTCModule) {
-			// Wait a bit for the module to load
-			await new Promise(resolve => setTimeout(resolve, 100));
-			if (!webRTCModule) {
-				throw new Error('WebRTC module not available');
-			}
-		}
-	}
-
+	// WebSocket event handlers
 	private async handleOffer(data: WebRTCOffer): Promise<void> {
 		try {
-			await this.ensureWebRTCModule();
-			
 			const { fromUserId, offer } = data;
-			console.log('Received offer from', fromUserId, 'offer:', offer);
+			console.log('Received offer from', fromUserId, 'offer type:', offer?.type);
 
-			// Get the correct RTCSessionDescription class
 			const RTCSessionDescriptionClass = Platform.OS === 'web' 
 				? window.RTCSessionDescription 
 				: webRTCModule?.RTCSessionDescription;
@@ -432,20 +470,45 @@ class WebRTCService {
 				return;
 			}
 
-			const pc = this.peerConnections.get(fromUserId) || this.createPeerConnection(fromUserId);
+			const pc = this.ensurePeer(fromUserId);
+			
+			// Check if we can set remote description
+			if (pc.signalingState !== 'stable' && pc.signalingState !== 'have-local-offer') {
+				console.warn(`Cannot set remote offer for ${fromUserId}, signaling state is:`, pc.signalingState);
+				return;
+			}
+
+			// If we're in have-local-offer state, we need to handle offer collision
+			if (pc.signalingState === 'have-local-offer') {
+				console.log('Offer collision detected, handling...');
+				// In a real implementation, you might want to compare offer strengths
+				// For now, let's just ignore this offer if we already sent one
+				return;
+			}
+			
+			// Set remote description first
+			console.log('Setting remote description for', fromUserId);
 			await (pc as any).setRemoteDescription(offer);
 			
+			// Create and send answer
+			console.log('Creating answer for', fromUserId);
 			const answer = await pc.createAnswer();
 			await pc.setLocalDescription(answer);
 
 			if (webSocketService.isConnected() && this.channelId) {
-				console.log('Sending answer to', fromUserId);
+				console.log('Sending answer to', fromUserId, 'answer type:', answer.type);
 				const signalData: WebRTCSignalData = {
 					channelId: this.channelId,
 					targetUserId: fromUserId,
 					answer: answer,
 				};
+				console.log('Emitting webrtc-answer with data:', {
+					channelId: signalData.channelId,
+					targetUserId: signalData.targetUserId,
+					answerType: signalData.answer?.type
+				});
 				webSocketService.emitToServer('webrtc-answer', signalData);
+				this.setStatus('answered offer');
 			}
 		} catch (error) {
 			console.error('Error handling offer:', error);
@@ -454,18 +517,25 @@ class WebRTCService {
 
 	private async handleAnswer(data: WebRTCAnswer): Promise<void> {
 		try {
-			await this.ensureWebRTCModule();
-			
 			const { fromUserId, answer } = data;
-			console.log('Received answer from', fromUserId, 'answer:', answer);
+			console.log('Received answer from', fromUserId, 'answer type:', answer?.type);
 
 			const pc = this.peerConnections.get(fromUserId);
-			if (pc) {
-				await (pc as any).setRemoteDescription(answer);
-				console.log('Set remote description for', fromUserId);
-			} else {
+			if (!pc) {
 				console.error('No peer connection found for user', fromUserId);
+				return;
 			}
+
+			// Check if we can set remote description
+			if (pc.signalingState !== 'have-local-offer') {
+				console.warn(`Cannot set remote answer for ${fromUserId}, signaling state is:`, pc.signalingState);
+				return;
+			}
+
+			console.log('Setting remote description (answer) for', fromUserId);
+			await (pc as any).setRemoteDescription(answer);
+			this.setStatus('connected (answer set)');
+			console.log('Set remote description for', fromUserId);
 		} catch (error) {
 			console.error('Error handling answer:', error);
 		}
@@ -473,32 +543,55 @@ class WebRTCService {
 
 	private async handleIceCandidate(data: WebRTCIceCandidate): Promise<void> {
 		try {
-			await this.ensureWebRTCModule();
-			
 			const { fromUserId, candidate } = data;
-			console.log('Received ICE candidate from', fromUserId, 'candidate:', candidate);
+			console.log('Received ICE candidate from', fromUserId);
+			
 			const pc = this.peerConnections.get(fromUserId);
-			if (pc && pc.remoteDescription) {
-				await (pc as any).addIceCandidate(candidate);
+			if (!pc) {
+				console.warn('No peer connection found for ICE candidate from', fromUserId);
+				return;
+			}
+
+			if (!pc.remoteDescription) {
+				console.warn('No remote description set yet for', fromUserId, 'signaling state:', pc.signalingState);
+				return;
+			}
+
+			const RTCIceCandidateClass = Platform.OS === 'web'
+				? window.RTCIceCandidate
+				: webRTCModule?.RTCIceCandidate;
+
+			if (RTCIceCandidateClass) {
+				await (pc as any).addIceCandidate(new RTCIceCandidateClass(candidate));
 				console.log('Added ICE candidate for', fromUserId);
-			} else {
-				console.warn('Cannot add ICE candidate: no peer connection or remote description for', fromUserId);
 			}
 		} catch (error) {
-			console.error('Error handling ICE candidate:', error);
+			console.warn('Failed to add ICE candidate:', error);
 		}
 	}
 
 	private async handleUserJoined(data: VoiceUser): Promise<void> {
 		try {
 			console.log('User joined voice channel:', data);
+			
+			// Check if we already have this user
+			if (this.connectedUsers.has(data.userId)) {
+				console.log('User', data.userId, 'already exists, skipping duplicate join');
+				return;
+			}
+
 			this.connectedUsers.set(data.userId, data);
 			this.callbacks?.onUserJoined(data);
+			this.setStatus('peer joined, waiting for ready');
 
-			// Create peer connection and immediately create an offer
-			const pc = this.createPeerConnection(data.userId);
-			
-			// Create and send offer to the new user
+			// Check if we already have a peer connection for this user
+			if (this.peerConnections.has(data.userId)) {
+				console.log('Peer connection already exists for', data.userId, 'skipping offer creation');
+				return;
+			}
+
+			// Create peer connection and send offer
+			const pc = this.ensurePeer(data.userId);
 			const offer = await pc.createOffer();
 			await pc.setLocalDescription(offer);
 
@@ -509,7 +602,13 @@ class WebRTCService {
 					targetUserId: data.userId,
 					offer: offer,
 				};
+				console.log('Emitting webrtc-offer (user joined) with data:', {
+					channelId: signalData.channelId,
+					targetUserId: signalData.targetUserId,
+					offerType: signalData.offer?.type
+				});
 				webSocketService.emitToServer('webrtc-offer', signalData);
+				this.setStatus('sent offer');
 			}
 		} catch (error) {
 			console.error('Error handling user joined:', error);
@@ -525,9 +624,11 @@ class WebRTCService {
 			this.peerConnections.delete(data.userId);
 		}
 
+		this.remoteStreams.delete(data.userId);
 		this.connectedUsers.delete(data.userId);
 		this.callbacks?.onUserLeft(data.userId);
 		this.callbacks?.onStreamRemoved(data.userId);
+		this.setStatus('peer left');
 	}
 
 	private handleUserUpdated(data: Partial<VoiceUser> & { userId: string }): void {
@@ -538,11 +639,20 @@ class WebRTCService {
 			const updatedUser = { ...user, ...data };
 			this.connectedUsers.set(data.userId, updatedUser);
 			this.callbacks?.onUserUpdated(data);
+
+			if (data.isCameraOn !== undefined) {
+				this.callbacks?.onCameraToggled?.(data.userId, data.isCameraOn);
+			}
 		}
 	}
 
-	getLocalStream(): MediaStream | null {
+	// Getters
+	getLocalStreamData(): MediaStream | null {
 		return this.localStream;
+	}
+
+	getRemoteStream(userId: string): MediaStream | null {
+		return this.remoteStreams.get(userId) || null;
 	}
 
 	getConnectedUsers(): VoiceUser[] {
@@ -563,6 +673,10 @@ class WebRTCService {
 
 	getCurrentChannelId(): string | null {
 		return this.channelId;
+	}
+
+	getStatus(): string {
+		return this.status;
 	}
 }
 

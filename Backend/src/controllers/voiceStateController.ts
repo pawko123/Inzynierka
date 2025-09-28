@@ -102,12 +102,10 @@ const leaveVoiceChannel = async (req: Request, res: Response) => {
 			return res.status(404).json({ message: 'User is not in this voice channel' });
 		}
 
-		voiceState.leftAt = new Date();
-		await voiceStateRepo.save(voiceState);
+		await voiceStateRepo.delete(voiceState.id);
 
 		return res.status(200).json({ 
-			message: 'Successfully left voice channel',
-			leftAt: voiceState.leftAt 
+			message: 'Successfully left voice channel'
 		});
 	} catch (err: unknown) {
 		const errorMessage = err instanceof Error ? err.message : 'Unknown error';

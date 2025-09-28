@@ -6,6 +6,7 @@ import inviteRouter from './inviteRoutes';
 import channelRouter from './channelRoutes';
 import messageRouter from './messageRoutes';
 import fileRouter from './attachmentsRouter';
+import voiceStateRouter from './voiceStateRouter';
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ export default (): express.Router => {
 	router.use('/channel', channelRouter);
 	router.use('/message', messageRouter);
 	router.use(`${process.env.ATTACHMENTS_PATH}`, fileRouter);
+	router.use('/voice-state', voiceStateRouter);
 
 	return router;
 };
