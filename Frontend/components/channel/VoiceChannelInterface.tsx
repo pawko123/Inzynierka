@@ -6,15 +6,14 @@ import {
 	ScrollView,
 	TouchableOpacity,
 	Alert,
-	Dimensions,
 } from 'react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { webRTCService } from '@/services/WebRTCService';
 import { VoiceUser } from '@/types/webrtc';
-import { WebRTCVideoView } from './WebRTCVideoView';
 import { getStrings } from '@/i18n';
+import { WebRTCVideoView } from './WebRTCVideoView';
 
 interface VoiceChannelInterfaceProps {
 	channelId: string;
@@ -24,7 +23,6 @@ interface VoiceChannelInterfaceProps {
 export default function VoiceChannelInterface({ channelId, channelName }: VoiceChannelInterfaceProps) {
 	const colorScheme = useColorScheme();
 	const colors = Colors[colorScheme ?? 'light'];
-	const screenDimensions = Dimensions.get('window');
 	const strings = getStrings();
 
 	const [isInCall, setIsInCall] = useState(false);
@@ -32,6 +30,7 @@ export default function VoiceChannelInterface({ channelId, channelName }: VoiceC
 	const [isCameraOn, setIsCameraOn] = useState(false);
 	const [connectedUsers, setConnectedUsers] = useState<VoiceUser[]>([]);
 	const [localStream, setLocalStream] = useState<any>(null);
+	const [userStreams, setUserStreams] = useState<Map<string, any>>(new Map());
 
 	const handleJoinCall = async () => {
 		try {
@@ -41,6 +40,11 @@ export default function VoiceChannelInterface({ channelId, channelName }: VoiceC
 				},
 				onUserLeft: (userId: string) => {
 					setConnectedUsers(prev => prev.filter(u => u.userId !== userId));
+					setUserStreams(prev => {
+						const updated = new Map(prev);
+						updated.delete(userId);
+						return updated;
+					});
 				},
 				onUserUpdated: (user: Partial<VoiceUser> & { userId: string }) => {
 					setConnectedUsers(prev => prev.map(u => 
@@ -50,22 +54,43 @@ export default function VoiceChannelInterface({ channelId, channelName }: VoiceC
 				onStreamReceived: (userId: string, stream) => {
 					if (userId === 'local') {
 						setLocalStream(stream);
+					} else {
+						setUserStreams(prev => new Map(prev.set(userId, stream)));
+						setConnectedUsers(prev => prev.map(u => 
+							u.userId === userId ? { ...u, stream } : u
+						));
 					}
-					setConnectedUsers(prev => prev.map(u => 
-						u.userId === userId ? { ...u, stream } : u
-					));
 				},
 				onStreamRemoved: (userId: string) => {
-					setConnectedUsers(prev => prev.map(u => 
-						u.userId === userId ? { ...u, stream: undefined } : u
-					));
+					if (userId === 'local') {
+						setLocalStream(null);
+					} else {
+						setUserStreams(prev => {
+							const updated = new Map(prev);
+							updated.delete(userId);
+							return updated;
+						});
+						setConnectedUsers(prev => prev.map(u => 
+							u.userId === userId ? { ...u, stream: undefined } : u
+						));
+					}
 				},
 				onError: (error: string) => {
 					console.error('WebRTC error:', error);
 					Alert.alert(strings.WebRTC.Error, error);
 				},
+				onCameraToggled: (userId: string, cameraOn: boolean) => {
+					if (userId === 'local') {
+						setIsCameraOn(cameraOn);
+					}
+				},
+				onLocalStreamUpdated: (stream) => {
+					setLocalStream(stream);
+				}
 			});
 			setIsInCall(true);
+			setIsMuted(webRTCService.isMicrophoneMuted());
+			setIsCameraOn(webRTCService.isCameraEnabled());
 		} catch (error) {
 			console.error('Failed to join voice channel:', error);
 			Alert.alert(strings.WebRTC.Error, strings.WebRTC.Failed_To_Join);
@@ -76,8 +101,11 @@ export default function VoiceChannelInterface({ channelId, channelName }: VoiceC
 		try {
 			await webRTCService.leaveVoiceChannel();
 			setIsInCall(false);
+			setIsMuted(false);
+			setIsCameraOn(false);
 			setLocalStream(null);
 			setConnectedUsers([]);
+			setUserStreams(new Map());
 		} catch (error) {
 			console.error('Failed to leave voice channel:', error);
 		}
@@ -86,7 +114,7 @@ export default function VoiceChannelInterface({ channelId, channelName }: VoiceC
 	const toggleMute = async () => {
 		try {
 			await webRTCService.toggleMute();
-			setIsMuted(!isMuted);
+			setIsMuted(webRTCService.isMicrophoneMuted());
 		} catch (error) {
 			console.error('Failed to toggle mute:', error);
 		}
@@ -95,73 +123,69 @@ export default function VoiceChannelInterface({ channelId, channelName }: VoiceC
 	const toggleCamera = async () => {
 		try {
 			await webRTCService.toggleCamera();
-			setIsCameraOn(!isCameraOn);
+			setIsCameraOn(webRTCService.isCameraEnabled());
 		} catch (error) {
 			console.error('Failed to toggle camera:', error);
+			Alert.alert(strings.WebRTC.Error, 'Failed to toggle camera');
 		}
 	};
 
-	const renderVideoGrid = () => {
-		const videoStreams = [];
+	const renderVideoUsers = () => {
+		const videoUsers = connectedUsers.filter(user => user.isCameraOn && userStreams.has(user.userId));
 		
-		if (localStream && isCameraOn) {
-			videoStreams.push({
+		// Add local video if camera is on
+		if (isCameraOn && localStream) {
+			videoUsers.unshift({
 				userId: 'local',
-				stream: localStream,
 				username: 'You',
 				isMuted,
+				isCameraOn: true,
+				stream: localStream,
 			});
 		}
 
-		connectedUsers.forEach(user => {
-			if (user.stream && user.isCameraOn) {
-				videoStreams.push({
-					userId: user.userId,
-					stream: user.stream,
-					username: user.username,
-					isMuted: user.isMuted,
-				});
-			}
-		});
+		if (videoUsers.length === 0) return null;
 
-		if (videoStreams.length === 0) {
-			return null;
-		}
-
-		const itemsPerRow = videoStreams.length === 1 ? 1 : videoStreams.length <= 4 ? 2 : 3;
-		const videoWidth = (screenDimensions.width - 40 - (itemsPerRow - 1) * 10) / itemsPerRow;
-		const videoHeight = videoWidth * 0.75;
+		const videoWidth = videoUsers.length === 1 ? '100%' : '48%';
+		const videoHeight = videoUsers.length <= 2 ? 200 : 150;
 
 		return (
 			<View style={styles.videoGrid}>
-				{videoStreams.map((videoStream) => (
-					<View key={videoStream.userId} style={[styles.videoContainer, { width: videoWidth, height: videoHeight }]}>
-						<WebRTCVideoView
-							stream={videoStream.stream}
-							style={styles.rtcView}
-							mirror={videoStream.userId === 'local'}
-							username={videoStream.username}
-							isMuted={videoStream.isMuted}
-							colors={colors}
-						/>
-						<View style={[styles.userOverlay, { backgroundColor: colors.background + '80' }]}>
-							<Text style={[styles.username, { color: colors.text }]} numberOfLines={1}>
-								{videoStream.username}
-							</Text>
-							{videoStream.isMuted && (
-								<Ionicons name="mic-off" size={16} color={colors.text} />
-							)}
+				{videoUsers.map((user) => {
+					const stream = user.userId === 'local' ? localStream : userStreams.get(user.userId);
+					return (
+						<View key={user.userId} style={[
+							styles.videoContainer, 
+							{ width: videoWidth, height: videoHeight }
+						]}>
+							<WebRTCVideoView
+								stream={stream}
+								style={styles.rtcView}
+								mirror={user.userId === 'local'}
+								username={user.username}
+								isMuted={user.isMuted}
+								colors={colors}
+							/>
+							<View style={[styles.userOverlay, { backgroundColor: 'rgba(0,0,0,0.7)' }]}>
+								<Text style={[styles.username, { color: 'white' }]} numberOfLines={1}>
+									{user.username}
+								</Text>
+								{user.isMuted && (
+									<Ionicons name="mic-off" size={16} color="white" />
+								)}
+							</View>
 						</View>
-					</View>
-				))}
+					);
+				})}
 			</View>
 		);
 	};
 
 	const renderAudioOnlyUsers = () => {
-		const audioOnlyUsers = connectedUsers.filter(user => !user.isCameraOn);
+		// Show audio-only users (no camera or local without camera)
+		const audioOnlyUsers = connectedUsers.filter(user => !user.isCameraOn || !userStreams.has(user.userId));
 		
-		if (audioOnlyUsers.length === 0 && (isCameraOn || !isInCall)) {
+		if (audioOnlyUsers.length === 0 && (!isInCall || isCameraOn)) {
 			return null;
 		}
 
@@ -208,7 +232,7 @@ export default function VoiceChannelInterface({ channelId, channelName }: VoiceC
 			</View>
 
 			<ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-				{renderVideoGrid()}
+				{renderVideoUsers()}
 				{renderAudioOnlyUsers()}
 			</ScrollView>
 
@@ -233,7 +257,7 @@ export default function VoiceChannelInterface({ channelId, channelName }: VoiceC
 							<Ionicons
 								name={isCameraOn ? "videocam" : "videocam-off"}
 								size={24}
-								color={colors.background}
+								color={isCameraOn ? colors.background : colors.text}
 							/>
 						</TouchableOpacity>
 

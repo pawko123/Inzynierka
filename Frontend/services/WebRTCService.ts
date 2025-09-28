@@ -1,6 +1,5 @@
 import { Platform } from 'react-native';
 import { webSocketService } from './WebSocketService';
-import { getStrings } from '@/i18n';
 import {
 	VoiceUser,
 	WebRTCCallbacks,
@@ -13,50 +12,19 @@ import {
 	WebRTCSignalData,
 } from '@/types/webrtc';
 
-let webRTCModule: any = null;
-let webRTCModuleLoaded = false;
-let webRTCModulePromise: Promise<any> | null = null;
-let webRTCModuleLoadFailed = false;
+let webRTCModule: typeof import('react-native-webrtc') | null = null;
 
 if (Platform.OS !== 'web') {
-	webRTCModulePromise = import('react-native-webrtc').then((module) => {
-		console.log('WebRTC module imported successfully:', !!module);
-		console.log('Module keys:', Object.keys(module));
-		// Access the module through the default export
-		webRTCModule = module.default || module;
-		console.log('WebRTC module after default access:', !!webRTCModule);
-		console.log('WebRTC module keys after default:', webRTCModule ? Object.keys(webRTCModule) : 'null');
-		
-		// Try to access mediaDevices in different ways
-		if (webRTCModule) {
-			console.log('Checking for mediaDevices...');
-			console.log('Direct mediaDevices:', !!webRTCModule.mediaDevices);
-			console.log('MediaDevices class:', !!webRTCModule.MediaDevices);
-			console.log('mediaDevices as property:', !!webRTCModule['mediaDevices']);
-			
-			// If mediaDevices doesn't exist, try to create it
-			if (!webRTCModule.mediaDevices && webRTCModule.MediaDevices) {
-				console.log('Creating mediaDevices instance...');
-				webRTCModule.mediaDevices = new webRTCModule.MediaDevices();
-			}
-		}
-		
-		webRTCModuleLoaded = true;
-		return module;
+	import('react-native-webrtc').then((module) => {
+		webRTCModule = module;
 	}).catch((error) => {
-		console.error('React Native WebRTC import failed:', error);
-		webRTCModuleLoaded = true; // Mark as loaded even if failed
-		webRTCModuleLoadFailed = true;
-		return null;
+		console.error('Failed to load react-native-webrtc:', error);
 	});
-} else {
-	webRTCModuleLoaded = true; // Web doesn't need the module
 }
 
 class WebRTCService {
 	private channelId: string | null = null;
 	private localStream: MediaStream | null = null;
-	private localVideoStream: MediaStream | null = null;
 	private peerConnections: Map<string, RTCPeerConnection> = new Map();
 	private connectedUsers: Map<string, VoiceUser> = new Map();
 	private callbacks: WebRTCCallbacks | null = null;
@@ -71,31 +39,6 @@ class WebRTCService {
 
 	constructor() {
 		this.setupWebSocketListeners();
-	}
-
-	private async ensureWebRTCModuleLoaded(): Promise<void> {
-		if (Platform.OS === 'web') {
-			return; // No module loading needed for web
-		}
-		
-		const strings = getStrings();
-		
-		if (webRTCModuleLoaded) {
-			if (webRTCModuleLoadFailed || !webRTCModule) {
-				throw new Error(strings.WebRTC.Module_Load_Failed);
-			}
-			return; // Already loaded successfully
-		}
-		
-		if (webRTCModulePromise) {
-			await webRTCModulePromise;
-			if (webRTCModuleLoadFailed || !webRTCModule) {
-				throw new Error(strings.WebRTC.Module_Load_Failed);
-			}
-			return;
-		}
-		
-		throw new Error(strings.WebRTC.Module_Not_Available);
 	}
 
 	private setupWebSocketListeners(): void {
@@ -113,7 +56,7 @@ class WebRTCService {
 			this.callbacks = callbacks;
 			this.isInCall = true;
 
-			await this.initializeLocalAudioStream();
+			await this.initializeLocalStream();
 
 			if (webSocketService.isConnected()) {
 				const joinData: VoiceChannelJoinData = {
@@ -122,6 +65,11 @@ class WebRTCService {
 					isCameraOn: this.isCameraOn,
 				};
 				webSocketService.emitToServer('join-voice-channel', joinData);
+
+				// Notify callback about local stream
+				if (this.localStream) {
+					this.callbacks.onStreamReceived('local', this.localStream);
+				}
 			}
 		} catch (error) {
 			console.error('Error joining voice channel:', error);
@@ -146,59 +94,11 @@ class WebRTCService {
 				this.localStream.getTracks().forEach((track) => track.stop());
 				this.localStream = null;
 			}
-			if (this.localVideoStream) {
-				this.localVideoStream.getTracks().forEach((track) => track.stop());
-				this.localVideoStream = null;
-			}
 
 			this.channelId = null;
 			this.isInCall = false;
-			this.isCameraOn = false;
 		} catch (error) {
 			console.error('Error leaving voice channel:', error);
-		}
-	}
-
-	async toggleCamera(): Promise<void> {
-		if (!this.isInCall || !this.channelId) return;
-
-		try {
-			if (this.isCameraOn) {
-				if (this.localVideoStream) {
-					this.localVideoStream.getTracks().forEach((track) => track.stop());
-					this.localVideoStream = null;
-				}
-				this.peerConnections.forEach((pc) => {
-					const videoSender = pc.getSenders().find((sender) => 
-						sender.track && sender.track.kind === 'video'
-					);
-					if (videoSender) {
-						pc.removeTrack(videoSender);
-					}
-				});
-				this.isCameraOn = false;
-			} else {
-				await this.initializeLocalVideoStream();
-				if (this.localVideoStream) {
-					const videoTrack = this.localVideoStream.getVideoTracks()[0];
-					this.peerConnections.forEach((pc) => {
-						pc.addTrack(videoTrack, this.localVideoStream!);
-					});
-				}
-				this.isCameraOn = true;
-			}
-
-			if (webSocketService.isConnected() && this.channelId) {
-				const updateData: VoiceUserUpdateData = {
-					channelId: this.channelId,
-					isCameraOn: this.isCameraOn,
-					isMuted: this.isMuted,
-				};
-				webSocketService.emitToServer('voice-user-update', updateData);
-			}
-		} catch (error) {
-			console.error('Error toggling camera:', error);
-			this.callbacks?.onError(`Failed to toggle camera: ${error instanceof Error ? error.message : String(error)}`);
 		}
 	}
 
@@ -226,46 +126,152 @@ class WebRTCService {
 		}
 	}
 
+	async toggleCamera(): Promise<void> {
+		if (!this.isInCall) return;
+
+		try {
+			this.isCameraOn = !this.isCameraOn;
+
+			// If turning camera on and we don't have video track, add it
+			if (this.isCameraOn) {
+				if (!this.localStream || this.localStream.getVideoTracks().length === 0) {
+					await this.addVideoTrack();
+				} else {
+					// Enable existing video track
+					const videoTrack = this.localStream.getVideoTracks()[0];
+					if (videoTrack) {
+						videoTrack.enabled = true;
+					}
+				}
+			} else {
+				// Disable video track but don't remove it
+				if (this.localStream) {
+					const videoTrack = this.localStream.getVideoTracks()[0];
+					if (videoTrack) {
+						videoTrack.enabled = false;
+					}
+				}
+			}
+
+			// Update all peer connections
+			await this.updatePeerConnectionTracks();
+
+			if (webSocketService.isConnected() && this.channelId) {
+				const updateData: VoiceUserUpdateData = {
+					channelId: this.channelId,
+					isCameraOn: this.isCameraOn,
+					isMuted: this.isMuted,
+				};
+				webSocketService.emitToServer('voice-user-update', updateData);
+			}
+
+			// Notify callback about stream update
+			if (this.localStream) {
+				this.callbacks?.onStreamReceived('local', this.localStream);
+				this.callbacks?.onCameraToggled?.('local', this.isCameraOn);
+				this.callbacks?.onLocalStreamUpdated?.(this.localStream);
+			}
+		} catch (error) {
+			console.error('Error toggling camera:', error);
+			this.callbacks?.onError(`Failed to toggle camera: ${error instanceof Error ? error.message : String(error)}`);
+		}
+	}
+
 	private async getUserMedia(constraints: MediaStreamConstraints): Promise<MediaStream> {
-		await this.ensureWebRTCModuleLoaded();
-		const strings = getStrings();
-		
 		if (Platform.OS === 'web') {
 			if (!navigator.mediaDevices?.getUserMedia) {
-				throw new Error(strings.WebRTC.Media_Devices_Not_Available);
+				throw new Error('getUserMedia not available on this platform');
 			}
 			return navigator.mediaDevices.getUserMedia(constraints);
 		} else {
-			console.log('WebRTC module loaded:', !!webRTCModule);
-			console.log('WebRTC mediaDevices available:', !!webRTCModule?.mediaDevices);
-			console.log('WebRTC getUserMedia available:', !!webRTCModule?.mediaDevices?.getUserMedia);
-			
-			if (!webRTCModule) {
-				throw new Error(strings.WebRTC.Module_Not_Available);
+			if (!webRTCModule?.mediaDevices?.getUserMedia) {
+				throw new Error('getUserMedia not available on this platform');
 			}
-			
-			// Try different ways to access mediaDevices
-			let mediaDevices = webRTCModule.mediaDevices;
-			
-			if (!mediaDevices && webRTCModule.MediaDevices) {
-				console.log('Trying to instantiate MediaDevices...');
+			return webRTCModule.mediaDevices.getUserMedia(constraints as any) as unknown as Promise<MediaStream>;
+		}
+	}
+
+	private async initializeLocalStream(): Promise<void> {
+		try {
+			const constraints: MediaStreamConstraints = {
+				audio: true,
+				video: this.isCameraOn,
+			};
+			this.localStream = await this.getUserMedia(constraints);
+		} catch (error) {
+			console.error('Error initializing local stream:', error);
+			// Fallback to audio-only if video fails
+			if (this.isCameraOn) {
 				try {
-					mediaDevices = new webRTCModule.MediaDevices();
-				} catch (error) {
-					console.log('Failed to instantiate MediaDevices:', error);
+					this.isCameraOn = false;
+					const constraints: MediaStreamConstraints = {
+						audio: true,
+						video: false,
+					};
+					this.localStream = await this.getUserMedia(constraints);
+				} catch (audioError) {
+					throw new Error(`Failed to initialize even audio stream: ${audioError instanceof Error ? audioError.message : String(audioError)}`);
 				}
+			} else {
+				throw error;
 			}
-			
-			if (!mediaDevices) {
-				console.log('Trying global mediaDevices...');
-				mediaDevices = global.navigator?.mediaDevices;
+		}
+	}
+
+	private async addVideoTrack(): Promise<void> {
+		if (!this.localStream) return;
+
+		try {
+			const videoStream = await this.getUserMedia({ video: true, audio: false });
+			const videoTrack = videoStream.getVideoTracks()[0];
+			if (videoTrack) {
+				this.localStream.addTrack(videoTrack);
 			}
-			
-			if (!mediaDevices || !mediaDevices.getUserMedia) {
-				throw new Error(strings.WebRTC.Media_Devices_Not_Available);
+		} catch (error) {
+			console.error('Error adding video track:', error);
+			throw error;
+		}
+	}
+
+	private async updatePeerConnectionTracks(): Promise<void> {
+		if (!this.localStream) return;
+
+		for (const [userId, pc] of this.peerConnections) {
+			try {
+				// Get current senders
+				const senders = pc.getSenders();
+				
+				// Handle video track
+				const videoTrack = this.localStream.getVideoTracks()[0];
+				const videoSender = senders.find(s => s.track?.kind === 'video');
+				
+				if (videoTrack && this.isCameraOn) {
+					if (videoSender) {
+						// Replace existing video track
+						await videoSender.replaceTrack(videoTrack);
+					} else {
+						// Add new video track
+						pc.addTrack(videoTrack, this.localStream);
+					}
+				} else if (videoSender && videoSender.track) {
+					// Remove video track
+					await videoSender.replaceTrack(null);
+				}
+
+				// Handle audio track (should always be present)
+				const audioTrack = this.localStream.getAudioTracks()[0];
+				const audioSender = senders.find(s => s.track?.kind === 'audio');
+				
+				if (audioTrack) {
+					if (audioSender) {
+						await audioSender.replaceTrack(audioTrack);
+					} else {
+						pc.addTrack(audioTrack, this.localStream);
+					}
+				}
+			} catch (error) {
+				console.error(`Error updating peer connection tracks for user ${userId}:`, error);
 			}
-			
-			return mediaDevices.getUserMedia(constraints);
 		}
 	}
 
@@ -276,30 +282,7 @@ class WebRTCService {
 		});
 	}
 
-	private async initializeLocalVideoStream(): Promise<void> {
-		const constraints: MediaStreamConstraints = {
-			audio: false,
-			video: Platform.OS === 'web' ? {
-				width: { ideal: 640 },
-				height: { ideal: 480 },
-				facingMode: 'user'
-			} : {
-				mandatory: {
-					minWidth: 640,
-					minHeight: 480,
-					minFrameRate: 30,
-				},
-				facingMode: 'user',
-				optional: [],
-			} as MediaTrackConstraints
-		};
-
-		this.localVideoStream = await this.getUserMedia(constraints);
-	}
-
-	private async createPeerConnection(userId: string): Promise<RTCPeerConnection> {
-		await this.ensureWebRTCModuleLoaded();
-		
+	private createPeerConnection(userId: string): RTCPeerConnection {
 		const RTCPeerConnectionClass = Platform.OS === 'web' 
 			? window.RTCPeerConnection 
 			: webRTCModule?.RTCPeerConnection;
@@ -308,9 +291,9 @@ class WebRTCService {
 			throw new Error('RTCPeerConnection not available');
 		}
 
-		const pc = new RTCPeerConnectionClass({ iceServers: this.iceServers });
+		const pc = new RTCPeerConnectionClass({ iceServers: this.iceServers }) as RTCPeerConnection;
 
-		pc.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
+		pc.onicecandidate = (event: any) => {
 			if (event.candidate && webSocketService.isConnected() && this.channelId) {
 				const signalData: WebRTCSignalData = {
 					channelId: this.channelId,
@@ -321,7 +304,7 @@ class WebRTCService {
 			}
 		};
 
-		pc.ontrack = (event: RTCTrackEvent) => {
+		pc.ontrack = (event: any) => {
 			console.log('Received remote stream from', userId);
 			const remoteStream = event.streams[0];
 			this.callbacks?.onStreamReceived(userId, remoteStream);
@@ -333,14 +316,32 @@ class WebRTCService {
 			}
 		};
 
+		pc.onnegotiationneeded = async () => {
+			try {
+				if (pc.signalingState !== 'stable') return;
+				
+				const offer = await pc.createOffer();
+				await pc.setLocalDescription(offer);
+
+				if (webSocketService.isConnected() && this.channelId) {
+					const signalData: WebRTCSignalData = {
+						channelId: this.channelId,
+						targetUserId: userId,
+						offer: offer,
+					};
+					webSocketService.emitToServer('webrtc-offer', signalData);
+				}
+			} catch (error) {
+				console.error('Error in negotiation needed:', error);
+			}
+		};
+
+		// Add local stream tracks
 		if (this.localStream) {
 			this.localStream.getTracks().forEach((track) => {
-				pc.addTrack(track, this.localStream!);
-			});
-		}
-		if (this.localVideoStream && this.isCameraOn) {
-			this.localVideoStream.getTracks().forEach((track) => {
-				pc.addTrack(track, this.localVideoStream!);
+				if (this.localStream) {
+					(pc as any).addTrack(track, this.localStream);
+				}
 			});
 		}
 
@@ -348,13 +349,36 @@ class WebRTCService {
 		return pc;
 	}
 
+	private async ensureWebRTCModule(): Promise<void> {
+		// Simple check to ensure webRTC module is available
+		if (Platform.OS !== 'web' && !webRTCModule) {
+			// Wait a bit for the module to load
+			await new Promise(resolve => setTimeout(resolve, 100));
+			if (!webRTCModule) {
+				throw new Error('WebRTC module not available');
+			}
+		}
+	}
+
 	private async handleOffer(data: WebRTCOffer): Promise<void> {
 		try {
+			await this.ensureWebRTCModule();
+			
 			const { fromUserId, offer } = data;
 			console.log('Received offer from', fromUserId);
 
-			const pc = await this.createPeerConnection(fromUserId);
-			await pc.setRemoteDescription(new RTCSessionDescription(offer));
+			// Get the correct RTCSessionDescription class
+			const RTCSessionDescriptionClass = Platform.OS === 'web' 
+				? window.RTCSessionDescription 
+				: webRTCModule?.RTCSessionDescription;
+
+			if (!RTCSessionDescriptionClass) {
+				console.error('RTCSessionDescription not available');
+				return;
+			}
+
+			const pc = this.createPeerConnection(fromUserId);
+			await (pc as any).setRemoteDescription(offer);
 			
 			const answer = await pc.createAnswer();
 			await pc.setLocalDescription(answer);
@@ -374,12 +398,14 @@ class WebRTCService {
 
 	private async handleAnswer(data: WebRTCAnswer): Promise<void> {
 		try {
+			await this.ensureWebRTCModule();
+			
 			const { fromUserId, answer } = data;
 			console.log('Received answer from', fromUserId);
 
 			const pc = this.peerConnections.get(fromUserId);
 			if (pc) {
-				await pc.setRemoteDescription(new RTCSessionDescription(answer));
+				await (pc as any).setRemoteDescription(answer);
 			}
 		} catch (error) {
 			console.error('Error handling answer:', error);
@@ -388,18 +414,12 @@ class WebRTCService {
 
 	private async handleIceCandidate(data: WebRTCIceCandidate): Promise<void> {
 		try {
-			await this.ensureWebRTCModuleLoaded();
+			await this.ensureWebRTCModule();
 			
 			const { fromUserId, candidate } = data;
 			const pc = this.peerConnections.get(fromUserId);
 			if (pc && pc.remoteDescription) {
-				const RTCIceCandidateClass = Platform.OS === 'web' 
-					? window.RTCIceCandidate 
-					: webRTCModule?.RTCIceCandidate;
-				
-				if (RTCIceCandidateClass) {
-					await pc.addIceCandidate(new RTCIceCandidateClass(candidate));
-				}
+				await (pc as any).addIceCandidate(candidate);
 			}
 		} catch (error) {
 			console.error('Error handling ICE candidate:', error);
@@ -412,18 +432,8 @@ class WebRTCService {
 			this.connectedUsers.set(data.userId, data);
 			this.callbacks?.onUserJoined(data);
 
-			const pc = await this.createPeerConnection(data.userId);
-			const offer = await pc.createOffer();
-			await pc.setLocalDescription(offer);
-
-			if (webSocketService.isConnected() && this.channelId) {
-				const signalData: WebRTCSignalData = {
-					channelId: this.channelId,
-					targetUserId: data.userId,
-					offer: offer,
-				};
-				webSocketService.emitToServer('webrtc-offer', signalData);
-			}
+			// Create peer connection - the negotiation will be handled automatically
+			this.createPeerConnection(data.userId);
 		} catch (error) {
 			console.error('Error handling user joined:', error);
 		}
@@ -456,10 +466,6 @@ class WebRTCService {
 
 	getLocalStream(): MediaStream | null {
 		return this.localStream;
-	}
-
-	getLocalVideoStream(): MediaStream | null {
-		return this.localVideoStream;
 	}
 
 	getConnectedUsers(): VoiceUser[] {

@@ -125,6 +125,32 @@ class WebSocketService {
 		this.socket.on('user-typing', (data: TypingData) => {
 			this.emit('user-typing', data);
 		});
+
+		// WebRTC events
+		this.socket.on('webrtc-offer', (data: any) => {
+			this.emit('webrtc-offer', data);
+		});
+
+		this.socket.on('webrtc-answer', (data: any) => {
+			this.emit('webrtc-answer', data);
+		});
+
+		this.socket.on('webrtc-ice-candidate', (data: any) => {
+			this.emit('webrtc-ice-candidate', data);
+		});
+
+		// Voice channel events
+		this.socket.on('voice-user-joined', (data: any) => {
+			this.emit('voice-user-joined', data);
+		});
+
+		this.socket.on('voice-user-left', (data: any) => {
+			this.emit('voice-user-left', data);
+		});
+
+		this.socket.on('voice-user-updated', (data: any) => {
+			this.emit('voice-user-updated', data);
+		});
 	}
 
 	private handleReconnection() {

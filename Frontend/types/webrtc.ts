@@ -18,6 +18,8 @@ export interface WebRTCCallbacks {
 	onStreamReceived: (userId: string, stream: CrossPlatformMediaStream) => void;
 	onStreamRemoved: (userId: string) => void;
 	onError: (error: string) => void;
+	onCameraToggled?: (userId: string, isCameraOn: boolean) => void;
+	onLocalStreamUpdated?: (stream: CrossPlatformMediaStream) => void;
 }
 
 export interface WebRTCOffer {
